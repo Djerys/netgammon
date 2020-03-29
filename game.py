@@ -15,23 +15,21 @@ class Game:
         self.background_image = pygame.image.load(background_image_filename)
         self.frame_rate = frame_rate
         self.game_over = False
-        self.objects = []
+        self.sprites = pygame.sprite.Group()
         pygame.mixer.init(frequency=44100)
         pygame.font.init()
         self.surface = pygame.display.set_mode((width, height))
         pygame.display.set_caption(caption)
         self.clock = pygame.time.Clock()
-        self.key_down_handlers = []
-        self.key_up_handlers = []
+        self.key_down_handlers = {}
+        self.key_up_handlers = {}
         self.mouse_handlers = []
 
     def _update(self):
-        for o in self.objects:
-            o.update()
+        self.sprites.update()
 
     def _draw(self):
-        for o in self.objects:
-            o.draw(self.surface)
+        self.sprites.draw(self.surface)
 
     def _handle_events(self):
         mouse_events = {
