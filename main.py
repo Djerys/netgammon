@@ -1,4 +1,6 @@
 from backgammon import Backgammon
+from checker import Checker
 
-
-Backgammon().run()
+game = Backgammon()
+game.sprites.add(Checker(Checker.BLACK, 0))
+game.run()
