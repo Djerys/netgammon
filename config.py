@@ -5,7 +5,7 @@ FRAME_RATE = 60
 
 CAPTION = 'Backgammon'
 
-BACKGROUND_IMAGE = 'img/backgammon_background.png'
+BACKGROUND_IMAGE = 'img/background.png'
 
 WHITE_CHECKER_IMAGE = 'img/white_checker.png'
 BLACK_CHECKER_IMAGE = 'img/black_checker.png'

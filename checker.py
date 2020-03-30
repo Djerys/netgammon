@@ -13,7 +13,7 @@ class Checker(pygame.sprite.Sprite):
             image_filename = config.WHITE_CHECKER_IMAGE
         else:
             image_filename = config.BLACK_CHECKER_IMAGE
-        self.image = pygame.image.load(image_filename).convert()
+        self.image = pygame.image.load(image_filename)
         self.point = point
         self.rect = self.image.get_rect()
 
