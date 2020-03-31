@@ -11,3 +11,7 @@ class Backgammon(Game):
             c.BACKGROUND_IMAGE,
             c.FRAME_RATE
         )
+
+
+if __name__ == '__main__':
+    Backgammon().run()

@@ -44,11 +44,11 @@ class Game:
                 sys.exit()
 
             elif event.type == pygame.KEYDOWN:
-                for handler in self.key_down_handlers:
+                for handler in self.key_down_handlers[event.key]:
                     handler(event.key)
 
             elif event.type == pygame.KEYUP:
-                for handler in self.key_up_handlers:
+                for handler in self.key_up_handlers[event.key]:
                     handler(event.key)
 
             elif event.type in mouse_events:

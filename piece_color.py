@@ -1,0 +1,2 @@
+WHITE = 'W'
+RED = 'R'
