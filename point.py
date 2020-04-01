@@ -6,19 +6,40 @@ class Point:
         self._pieces = []
         self.number = number
 
+    def __copy__(self):
+        pass
+
+    def __lt__(self, other):
+        return self.number < other.number
+
+    def __gt__(self, other):
+        return self.number > other.number
+
+    def __le__(self, other):
+        return self.number <= other.number
+
+    def __ge__(self, other):
+        return self.number >= other.number
+
+    def __eq__(self, other):
+        return self.number == self.number
+
+    def __ne__(self, other):
+        return self.number != self.number
+
+    def __hash__(self):
+        return hash(self.number)
+
     @property
     def pieces(self):
         return tuple(self._pieces)
-
-    def __copy__(self):
-        pass
 
     def push(self, piece):
         if piece not in self.pieces:
             self._pieces.append(piece)
             if self.number not in {0, 25}:
-                assert ({p.color for p in self.pieces} == {piece.color},
-                        'Only pieces of same color allowed in a point')
+                assert {p.color for p in self.pieces} == {piece.color}, \
+                    'Only pieces of same color allowed in a point'
 
     def pop(self):
         assert self.pieces, 'No pieces at this Point'
