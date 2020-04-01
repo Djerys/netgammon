@@ -9,6 +9,15 @@ class Piece:
         self._color = color
         self._number = number
 
+    def __repr__(self):
+        return f'{self.color} No {self.number}'
+
+    def __eq__(self, other):
+        return self.color == other.color and self.number == other.number
+
+    def __hash__(self):
+        return hash(self.color) + hash(self.number)
+
     @property
     def color(self):
         return self._color
@@ -16,9 +25,3 @@ class Piece:
     @property
     def number(self):
         return self._number
-
-    def __eq__(self, other):
-        return self.color == other.color and self.number == other.number
-
-    def __hash__(self):
-        return hash(self.color) + hash(self.number)

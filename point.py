@@ -6,6 +6,12 @@ class Point:
         self._pieces = []
         self.number = number
 
+    def __repr__(self):
+        info = 'empty'
+        if self.pieces:
+            info = f'{self.color}{len(self.pieces)}'
+        return f'{self.number}: {info}'
+
     def __copy__(self):
         pass
 
