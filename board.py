@@ -13,23 +13,44 @@ class Board:
         self._pieces_on_start(piece_color.WHITE, white_start_state)
         self._pieces_on_start(piece_color.RED, red_start_state)
 
+    def __repr__(self):
+        return f'Board{self.points}'
+
     def move(self, from_point, to_point):
-        pass
+        if not isinstance(from_point, int):
+            from_point = from_point.number
+        assert 0 <= from_point <= 25, f'Valid points are [0..25]: {from_point}'
+        from_point = self.points[from_point]
+        if not isinstance(to_point, int):
+            to_point = to_point.number
+        assert 0 <= to_point <= 25, f'Valid points are [0..25]: {to_point}'
+        to_point = self.points[to_point]
+        bear_off = to_point in {
+            self.outer(piece_color.WHITE),
+            self.outer(piece_color.RED)
+        }
+        if not bear_off:
+            assert not to_point.blocked(from_point.color), \
+                'Cannot move to a blocked point'
+        different_colors = from_point.color != to_point.color
+        if to_point.pieces and different_colors and not bear_off:
+            self.bar(to_point.color).push(to_point.pop())
+        to_point.push(from_point.pop())
 
     def possible_moves(self, roll, point):
         if isinstance(point, int):
             assert 0 <= point <= 25, f'Valid points are [0..25]: {point}'
             point = self.points[point]
-        assert point.pieces, 'There are no pieces on this point'
+        assert point.pieces, f'There are no pieces on this point: {point}'
         piece = point.pieces[-1]
         direction = 1 if piece.color == piece_color.WHITE else -1
         dies = roll.dies
         if not dies:
             return []
         if len(dies) == 1:
-            paths = [(dies[0])]
+            paths = [(dies[0],)]
         elif dies[0] == dies[1]:
-            paths = [(dies[0]) * len(dies)]
+            paths = [(dies[0],) * len(dies)]
         else:
             paths = [(dies[0], dies[1]), (dies[1], dies[0])]
         many_in_bar = len(self.bar_pieces(piece.color)) > 1
