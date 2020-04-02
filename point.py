@@ -12,9 +12,6 @@ class Point:
             info = f'{self.color}{len(self.pieces)}'
         return f'{self.number}: {info}'
 
-    def __copy__(self):
-        pass
-
     def __lt__(self, other):
         return self.number < other.number
 

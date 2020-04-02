@@ -15,10 +15,6 @@ class Roll:
         else:
             self._dies = (die1, die2)
 
-    @property
-    def dies(self):
-        return self._dies
-
     def __repr__(self):
         return f'{self.die1}x{self.die2}'
 
@@ -27,3 +23,18 @@ class Roll:
 
     def __eq__(self, other):
         return self.die1 == other.die1 and self.die2 == other.die2
+
+    @property
+    def dies(self):
+        return self._dies
+
+    def use(self, move):
+        dies_to_use = list(self.dies)
+        if move in dies_to_use:
+            dies_to_use.remove(move)
+        else:
+            while dies_to_use and move > max(dies_to_use):
+                move -= dies_to_use.pop()
+            if move != 0:
+                raise ValueError('Impossible move')
+        self._dies = tuple(dies_to_use)
