@@ -1,6 +1,5 @@
-from turn import Turn
-from roll import Roll
-from board import Board
+from model.roll import Roll
+from model.board import Board
 
 
 board = Board()

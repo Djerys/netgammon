@@ -1,8 +1,8 @@
 import operator
 
 import piece_color
-from piece import Piece
-from point import Point
+from model.piece import Piece
+from model.point import Point
 
 
 class Board:
@@ -10,8 +10,8 @@ class Board:
         self._points = tuple(Point(i) for i in range(26))
         white_start_state = ((1, 2), (12, 5), (17, 3), (19, 5))
         red_start_state = ((24, 2), (13, 5), (8, 3), (6, 5))
-        self._pieces_on_start(piece_color.WHITE, white_start_state)
-        self._pieces_on_start(piece_color.RED, red_start_state)
+        self._on_start(piece_color.WHITE, white_start_state)
+        self._on_start(piece_color.RED, red_start_state)
 
     def __repr__(self):
         return f'Board{self.points}'
@@ -127,7 +127,7 @@ class Board:
                 p not in saved and
                 p != bar]
 
-    def _pieces_on_start(self, color, start_state):
+    def _on_start(self, color, start_state):
         number = 1
         for point, count in start_state:
             for i in range(count):
