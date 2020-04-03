@@ -1,8 +1,8 @@
 import operator
 
 import piece_color
-from model.piece import Piece
-from model.point import Point
+from logic.piece import Piece
+from logic.point import Point
 
 
 class Board:
