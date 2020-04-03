@@ -16,6 +16,10 @@ class Board:
     def __repr__(self):
         return f'Board{self.points}'
 
+    @property
+    def points(self):
+        return self._points
+
     def move(self, from_point, to_point):
         if not isinstance(from_point, int):
             from_point = from_point.number
@@ -133,7 +137,3 @@ class Board:
             for i in range(count):
                 self.points[point].push(Piece(color, number))
                 number += 1
-
-    @property
-    def points(self):
-        return self._points
