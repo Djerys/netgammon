@@ -1,5 +1,5 @@
 import config as c
-from game import Game
+from base.game import Game
 
 
 class Backgammon(Game):
