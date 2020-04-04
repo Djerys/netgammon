@@ -1,5 +1,5 @@
-from logic.roll import Roll
-from logic.board import Board
+from logic import Roll
+from logic import Board
 
 
 board = Board()

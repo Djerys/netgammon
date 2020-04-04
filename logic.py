@@ -1,8 +1,101 @@
+import random
 import operator
 
 import piece_color
-from logic.piece import Piece
-from logic.point import Point
+
+
+class Piece:
+    def __init__(self, color, number):
+        assert color in {piece_color.WHITE, piece_color.RED}, \
+            f'Color must be {piece_color.WHITE} or {piece_color.RED}: {color}'
+        assert 1 <= number <= 15, f'Number out of range [1..15]: {number}'
+        self._color = color
+        self._number = number
+
+    def __repr__(self):
+        return f'{self.color} No {self.number}'
+
+    def __eq__(self, other):
+        return self.color == other.color and self.number == other.number
+
+    def __hash__(self):
+        return hash(self.color) + hash(self.number)
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def number(self):
+        return self._number
+
+
+class Point:
+    def __init__(self, number):
+        self._pieces = []
+        self.number = number
+
+    def __repr__(self):
+        info = 'empty'
+        if self.pieces:
+            info = f'{self.color}{len(self.pieces)}'
+        return f'{self.number}: {info}'
+
+    def __lt__(self, other):
+        return self.number < other.number
+
+    def __gt__(self, other):
+        return self.number > other.number
+
+    def __le__(self, other):
+        return self.number <= other.number
+
+    def __ge__(self, other):
+        return self.number >= other.number
+
+    def __eq__(self, other):
+        return self.number == self.number
+
+    def __ne__(self, other):
+        return self.number != self.number
+
+    def __hash__(self):
+        return hash(self.number)
+
+    @property
+    def pieces(self):
+        return tuple(self._pieces)
+
+    def push(self, piece):
+        if piece not in self._pieces:
+            self._pieces.append(piece)
+            if self.number not in {0, 25}:
+                assert {p.color for p in self.pieces} == {piece.color}, \
+                    'Only pieces of same color allowed in a point'
+
+    def pop(self):
+        assert self._pieces, 'No pieces at this Point'
+        return self._pieces.pop()
+
+    def blocked(self, color):
+        return (self.number not in {0, 25} and
+                color != self.color and
+                len(self._pieces) > 1)
+
+    @property
+    def color(self):
+        color_ = None
+        if self._pieces:
+            colors = {p.color for p in self._pieces}
+            if self.number == 0 and piece_color.WHITE in colors:
+                color_ = piece_color.WHITE
+            elif self.number == 25 and piece_color.RED in colors:
+                color_ = piece_color.RED
+            elif len(colors) == 1:
+                color_ = self._pieces[0].color
+            else:
+                raise ValueError('More than on color in one point')
+        return color_
 
 
 class Board:
@@ -137,3 +230,54 @@ class Board:
             for i in range(count):
                 self.points[point].push(Piece(color, number))
                 number += 1
+
+
+class Roll:
+    def __init__(self, die1=None, die2=None):
+        if die1 is None:
+            die1 = random.randint(1, 6)
+        if die2 is None:
+            die2 = random.randint(1, 6)
+        assert 1 <= die1 <= 6, f'Invalid roll: {die1}'
+        assert 1 <= die2 <= 6, f'Invalid roll: {die2}'
+        self.die1, self.die2 = die1, die2
+        if die1 == die2:
+            self._dies = (die1, die1, die1, die1)
+        else:
+            self._dies = (die1, die2)
+
+    def __repr__(self):
+        return f'{self.die1}x{self.die2}'
+
+    def __hash__(self):
+        return hash(self.die1) + hash(self.die2)
+
+    def __eq__(self, other):
+        return self.die1 == other.die1 and self.die2 == other.die2
+
+    @property
+    def dies(self):
+        return self._dies
+
+    def use(self, move):
+        dies_to_use = list(self.dies)
+        if move in dies_to_use:
+            dies_to_use.remove(move)
+        else:
+            while dies_to_use and move > max(dies_to_use):
+                move -= dies_to_use.pop()
+            if move != 0:
+                raise ValueError('Impossible move')
+        self._dies = tuple(dies_to_use)
+
+
+class Turn:
+    def __init__(self, roll, moves):
+        self.roll = roll
+        self.moves = moves
+
+    def __repr__(self):
+        return f'{self.roll}: {self.moves}'
+
+    def __eq__(self, other):
+        return self.roll == other.roll and self.moves == other.moves
