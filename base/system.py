@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class FilterDecorator(ABC):
+    """Abstract base decorator to filter entities in System class."""
     def __init__(self, *component_types):
         self.component_types = component_types
 
@@ -15,14 +16,18 @@ class FilterDecorator(ABC):
 
 
 class requires(FilterDecorator):
-    """Decorator object adds required components clauses to System class."""
+    """Decorator adds clauses to System to filter
+    entities with required components.
+    """
 
     def _clauses(self, entity):
         return entity.has_components(*self.component_types)
 
 
 class excludes(FilterDecorator):
-    """Decorator object add component except excluded clauses to System class."""
+    """Decorator adds clauses to System to filter
+    entities without excluded components.
+    """
 
     def _clauses(self, entity):
         return not any(
@@ -31,10 +36,28 @@ class excludes(FilterDecorator):
 
 
 class Component:
+    """Base empty class for all Components to inherit from."""
     pass
 
 
 class System(ABC):
+    """Base class for all Systems to inherit from.
+
+    System instance must contain a `update` method. This method
+    will be call by each call to `World.update`.
+
+    System subclass must be declared with filter decorator to add
+    __clauses__ because required_entities property returns entities
+    with components according to __clauses__.
+
+    Example of overriding `update' method:
+    for entity in self.required_entities:
+        a = entity.get_component(ComponentA)
+        b = entity.get_component(ComponentB)
+        do_some_work(a, b)
+        . . .
+
+    """
     __clauses__ = None
 
     def __init__(self):
@@ -52,6 +75,11 @@ class System(ABC):
 
 
 class Entity:
+    """Class container for Component objects.
+
+    Do not use `__init__` method. Entities must be created by
+    World instance.
+    """
     def __init__(self, id, world, *components):
         self._id = id
         assert isinstance(world, World), 'world is not instance of World class'
@@ -88,6 +116,11 @@ class Entity:
 
 
 class World:
+    """A World object keeps track of all Entities and Systems.
+
+    Method `update` updates every included system in order
+    according to priority.
+    """
     def __init__(self):
         self._systems = []
         self._next_entity_id = 0
