@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from base import system
+from code.base import system
 
 
 @dataclass

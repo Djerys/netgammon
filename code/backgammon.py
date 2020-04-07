@@ -1,11 +1,10 @@
 import sys
-from dataclasses import dataclass
 
 import pygame
 
-import config as c
-from base import system
-from base.game import Game
+from . import config as c
+from .base import system
+from .base.game import Game
 
 
 class Renderable(system.Component):
