@@ -1,20 +1,21 @@
 import sys
 
 import pygame
+import ecys
 
 from . import config as c
-from .base import system
-from .base.game import Game
+from .game import Game
 
 
-class Renderable(system.Component):
-    def __init__(self, image_filename):
+class Renderable(ecys.Component):
+    def __init__(self, image_filename, is_visible=True):
         self.image = pygame.image.load(image_filename)
         self.rect = self.image.get_rect()
+        self.is_visible = is_visible
 
 
-@system.requires(Renderable)
-class RenderSystem(system.System):
+@ecys.requires(Renderable)
+class RenderSystem(ecys.System):
     def __init__(self, width, height, background_filename):
         super().__init__()
         self.surface = pygame.display.set_mode((width, height))
@@ -33,7 +34,7 @@ class Backgammon(Game):
         super().__init__(c.CAPTION, c.FRAME_RATE)
 
     def _create_world(self):
-        world = system.World()
+        world = ecys.World()
         render_system = RenderSystem(
             c.SCREEN_WIDTH, c.SCREEN_HEIGHT, c.BACKGROUND_IMAGE
         )
