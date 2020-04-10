@@ -6,6 +6,7 @@ import ecys
 
 import logic
 import config
+import color
 from game import Game
 
 
@@ -74,12 +75,42 @@ class EventSystem(ecys.System):
                     render.visible = True
 
 
+@ecys.requires(PointEventComponent, RenderComponent, PointNumberComponent)
+class HintSystem(ecys.System):
+    def update(self):
+        for entity in self.entities:
+            event = entity.get_component(PointEventComponent)
+            render = entity.get_component(RenderComponent)
+            number = entity.get_component(PointNumberComponent)
+            if event.type == PointEventComponent.FROM and event.clicked:
+
+    def _from_point(self):
+        pass
+
+
 class Backgammon(Game):
     def __init__(self):
         super().__init__(
             config.CAPTION, config.SCREEN_WIDTH,
             config.SCREEN_HEIGHT, config.FRAME_RATE
         )
+        self.board = logic.Board()
+        self.history = []
+
+    @property
+    def roll(self):
+        return self.history[-1].roll
+
+    @property
+    def color(self):
+        return color.RED if len(self.history) % 2 == 0 else color.WHITE
+
+    @property
+    def moves(self):
+        return self.history[-1].moves
+
+    def roll_dice(self):
+        self.history.append(logic.Turn(logic.Roll(), []))
 
     def _create_world(self):
         world = ecys.World()
