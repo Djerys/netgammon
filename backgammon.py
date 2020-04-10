@@ -19,75 +19,76 @@ class RenderComponent(ecys.Component):
 
 
 class PointEventComponent(ecys.Component):
-    SOURCE = 1
-    DESTINY = 2
+    FROM = 1
+    TO = 2
 
-    def __init__(self, what, clicked=False):
-        self.what = what
+    def __init__(self, type, clicked=False):
+        self.type = type
         self.clicked = clicked
 
 
 @dataclass
-class TurnComponent(ecys.Component):
-    turn: logic.Turn
+class PointNumberComponent(ecys.Component):
+    value: int
 
 
 @ecys.requires(RenderComponent)
 class RenderSystem(ecys.System):
-    def __init__(self, width, height, background_filename):
+    def __init__(self, surface, background_filename):
         super().__init__()
-        self.surface = pygame.display.set_mode((width, height))
+        self.surface = surface
         self.background_image = pygame.image.load(background_filename)
 
     def update(self):
         self.surface.blit(self.background_image, (0, 0))
-        for entity in self.required_entities:
+        for entity in self.entities:
             render = entity.get_component(RenderComponent)
             if render.visible:
                 self.surface.blit(render.image, render.rect)
         pygame.display.update()
 
 
-@ecys.requires(PointEventComponent, RenderComponent)
-class PointEventHandlingSystem(ecys.System):
-    def __init__(self):
-        super().__init__()
-
+class EventSystem(ecys.System):
     def update(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                self._handle_close_window()
 
             if event.type == pygame.MOUSEBUTTONUP:
-                for entity in self.required_entities:
-                    self._handle(entity, event.pos)
+                self._handle_press_on_point(event.pos)
 
     @staticmethod
-    def _handle(entity, position):
-        clicked, visible = False, False
-        event = entity.get_component(PointEventComponent)
-        render = entity.get_component(RenderComponent)
-        if render.rect.collidepoint(position):
-            clicked, visible = True, True
-        event.clicked = clicked
-        render.visible = visible
+    def _handle_close_window():
+        pygame.quit()
+        sys.exit()
+
+    def _handle_press_on_point(self, position):
+        entities = self.world.entities_with(PointEventComponent, RenderComponent)
+        for entity in entities:
+            event = entity.get_component(PointEventComponent)
+            render = entity.get_component(RenderComponent)
+            render.visible = False
+            if render.rect.collidepoint(position):
+                event.clicked = True
+                if event.type == PointEventComponent.FROM:
+                    render.visible = True
 
 
 class Backgammon(Game):
     def __init__(self):
-        super().__init__(config.CAPTION, config.FRAME_RATE)
+        super().__init__(
+            config.CAPTION, config.SCREEN_WIDTH,
+            config.SCREEN_HEIGHT, config.FRAME_RATE
+        )
 
     def _create_world(self):
         world = ecys.World()
-        render_system = RenderSystem(
-            config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.BACKGROUND_IMAGE
-        )
+        render_system = RenderSystem(self.surface, config.BACKGROUND_IMAGE)
         world.add_system(render_system,  priority=0)
-        world.add_system(PointEventHandlingSystem(), priority=1)
+        world.add_system(EventSystem(), priority=1)
         world.create_entity(
             RenderComponent(config.DICE_IMAGES[1]),
-            PointEventComponent(PointEventComponent.DESTINY)
+            PointEventComponent(PointEventComponent.FROM)
         )
         return world
 

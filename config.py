@@ -5,16 +5,16 @@ FRAME_RATE = 60
 
 CAPTION = 'Backgammon'
 
-BACKGROUND_IMAGE = 'assets/img/background.png'
+BACKGROUND_IMAGE = 'assets/image/background.png'
 
-WHITE_PIECE_IMAGE = 'assets/img/white_checker.png'
-RED_PIECE_IMAGE = 'assets/img/black_checker.png'
+WHITE_PIECE_IMAGE = 'assets/image/white_checker.png'
+RED_PIECE_IMAGE = 'assets/image/black_checker.png'
 
 DICE_IMAGES = {
-    1: 'assets/img/dice_1.png',
-    2: 'assets/img/dice_2.png',
-    3: 'assets/img/dice_3.png',
-    4: 'assets/img/dice_4.png',
-    5: 'assets/img/dice_5.png',
-    6: 'assets/img/dice_6.png'
+    1: 'assets/image/dice_1.png',
+    2: 'assets/image/dice_2.png',
+    3: 'assets/image/dice_3.png',
+    4: 'assets/image/dice_4.png',
+    5: 'assets/image/dice_5.png',
+    6: 'assets/image/dice_6.png'
 }
