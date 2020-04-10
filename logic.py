@@ -1,7 +1,7 @@
 import random
 import operator
 
-from . import piece_color
+import piece_color
 
 
 class Piece:
