@@ -83,6 +83,7 @@ class HintSystem(ecys.System):
             render = entity.get_component(RenderComponent)
             number = entity.get_component(PointNumberComponent)
             if event.type == PointEventComponent.FROM and event.clicked:
+                pass
 
     def _from_point(self):
         pass
