@@ -173,7 +173,7 @@ class Backgammon(Game):
             if i >= 13:
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
-                RenderComponent(image, graphic.FROM_COORDS[i], True),
+                RenderComponent(image, graphic.FROM_COORDS[i]),
                 PointEventComponent(PointEventComponent.FROM),
                 PointNumberComponent(i)
             )
@@ -183,7 +183,7 @@ class Backgammon(Game):
         image = config.TO_IMAGE
         for i in range(0, 26):
             world.create_entity(
-                RenderComponent(image, graphic.TO_COORDS[i], True),
+                RenderComponent(image, graphic.TO_COORDS[i]),
                 PointEventComponent(PointEventComponent.TO),
                 PointNumberComponent(i)
             )
