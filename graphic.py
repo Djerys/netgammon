@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 @dataclass
 class PointCoordinates(ABC):
+    width: int
+    height: int
     red_y: int
     white_y: int
     home_x: int = 273
@@ -27,6 +29,8 @@ class PointCoordinates(ABC):
 
 @dataclass
 class FromPointCoordinates(PointCoordinates):
+    width: int = 30
+    height: int = 210
     red_y: int = 15
     white_y: int = 375
 
@@ -38,6 +42,8 @@ class FromPointCoordinates(PointCoordinates):
 
 @dataclass
 class ToPointCoordinates(PointCoordinates):
+    width: int = 30
+    height: int = 30
     red_y: int = 247
     white_y: int = 323
     bear_off_x: int = 455
