@@ -71,22 +71,37 @@ class EventSystem(ecys.System):
             render.visible = False
             if render.rect.collidepoint(position):
                 event.clicked = True
-                if event.type == PointEventComponent.FROM:
-                    render.visible = True
 
 
 @ecys.requires(PointEventComponent, RenderComponent, PointNumberComponent)
 class HintSystem(ecys.System):
+    def __init__(self, game):
+        super().__init__()
+        self.game = game
+
     def update(self):
-        for entity in self.entities:
-            event = entity.get_component(PointEventComponent)
-            render = entity.get_component(RenderComponent)
-            number = entity.get_component(PointNumberComponent)
-            if event.type == PointEventComponent.FROM and event.clicked:
-                pass
+        from_point = self._from_point()
+        if from_point is None:
+            return
+        render = from_point.get_component(RenderComponent)
+        render.visible = True
+        number = from_point.get_component(PointNumberComponent).value
+        possible_points = self.game.board.possible_moves(self.game.roll, number)
+        self._make_visible_possibles(possible_points)
 
     def _from_point(self):
-        pass
+        for entity in self.entities:
+            event = entity.get_component(PointEventComponent)
+            if event.type == PointEventComponent.FROM and event.clicked:
+                return entity
+        return None
+
+    def _make_visible_possibles(self, possible_points):
+        for entity in self.entities:
+            number = entity.get_component(PointNumberComponent).value
+            if number in possible_points:
+                render = entity.get_component(RenderComponent)
+                render.visible = True
 
 
 class Backgammon(Game):
