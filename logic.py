@@ -175,7 +175,7 @@ class Board:
     def can_bear_off(self, piece_color):
         points = range(19) if piece_color == color.WHITE else range(7, 26)
         for point in points:
-            if color == self.points[point].color:
+            if piece_color == self.points[point].color:
                 return False
         return True
 

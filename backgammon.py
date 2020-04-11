@@ -15,8 +15,8 @@ class RenderComponent(ecys.Component):
     def __init__(self, image_filename, coords=(0, 0), visible=False):
         self.image = pygame.image.load(image_filename)
         self.rect = self.image.get_rect()
-        self.rect.centerx = coords[0]
-        self.rect.centery = coords[1]
+        self.rect.x = coords[0]
+        self.rect.y = coords[1]
         self.visible = visible
 
 
@@ -135,8 +135,8 @@ class Backgammon(Game):
     def moves(self):
         return self.history[-1].moves
 
-    def roll_dice(self):
-        self.history.append(logic.Turn(logic.Roll(), []))
+    def roll_dice(self, roll=None):
+        self.history.append(logic.Turn(roll or logic.Roll(), []))
 
     def _create_world(self):
         world = ecys.World()
@@ -150,6 +150,17 @@ class Backgammon(Game):
     def _update_world(self):
         self.world.update()
 
+    def _create_pieces(self, world):
+        for point in self.board.points:
+            for _ in point.pieces:
+                if point.color == color.RED:
+                    image = config.RED_PIECE_IMAGE
+                else:
+                    image = config.WHITE_PIECE_IMAGE
+                world.create_entity(
+                    RenderComponent(image)
+                )
+
     @staticmethod
     def _create_points(world):
         Backgammon._create_from_points(world)
@@ -162,7 +173,7 @@ class Backgammon(Game):
             if i >= 13:
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
-                RenderComponent(image, graphic.FROM_COORDS[i]),
+                RenderComponent(image, graphic.FROM_COORDS[i], True),
                 PointEventComponent(PointEventComponent.FROM),
                 PointNumberComponent(i)
             )
@@ -180,6 +191,6 @@ class Backgammon(Game):
 
 if __name__ == '__main__':
     game = Backgammon()
-    game.roll_dice()
+    game.roll_dice(logic.Roll(2, 6))
     print(game.roll)
     game.run()

@@ -6,8 +6,8 @@ from dataclasses import dataclass
 class PointCoordinates(ABC):
     red_y: int
     white_y: int
-    home_x: int = 288
-    outer_x: int = 38
+    home_x: int = 273
+    outer_x: int = 23
     x_step: int = 35
 
     def __getitem__(self, point_number):
@@ -27,8 +27,8 @@ class PointCoordinates(ABC):
 
 @dataclass
 class FromPointCoordinates(PointCoordinates):
-    red_y: int = 120
-    white_y: int = 480
+    red_y: int = 15
+    white_y: int = 375
 
     def __getitem__(self, point_number):
         assert 1 <= point_number <= 24, \
@@ -38,10 +38,10 @@ class FromPointCoordinates(PointCoordinates):
 
 @dataclass
 class ToPointCoordinates(PointCoordinates):
-    red_y: int = 262
-    white_y: int = 338
-    bear_off_x: int = 470
-    bear_off_y: int = 300
+    red_y: int = 247
+    white_y: int = 323
+    bear_off_x: int = 455
+    bear_off_y: int = 285
 
     def __getitem__(self, point_number):
         assert 0 <= point_number <= 25,\
