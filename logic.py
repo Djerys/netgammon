@@ -5,11 +5,11 @@ import color
 
 
 class Piece:
-    def __init__(self, color, number):
-        assert color in {color.WHITE, color.RED}, \
+    def __init__(self, piece_color, number):
+        assert piece_color in {color.WHITE, color.RED}, \
             f'Color must be {color.WHITE} or {color.RED}: {color}'
         assert 1 <= number <= 15, f'Number out of range [1..15]: {number}'
-        self._color = color
+        self._color = piece_color
         self._number = number
 
     def __repr__(self):
@@ -172,8 +172,8 @@ class Board:
                     moves.append(number)
         return sorted(moves)
 
-    def can_bear_off(self, color):
-        points = range(19) if color == color.WHITE else range(7, 26)
+    def can_bear_off(self, piece_color):
+        points = range(19) if piece_color == color.WHITE else range(7, 26)
         for point in points:
             if color == self.points[point].color:
                 return False
@@ -186,23 +186,29 @@ class Board:
                       p.color == color.RED]
         return len(outer_whites) == 15 or len(outer_reds) == 15
 
-    def bar(self, color):
-        return self.points[0 if color == color.WHITE else 25]
+    def bar(self, piece_color):
+        return self.points[0 if piece_color == color.WHITE else 25]
 
-    def bar_pieces(self, color):
-        return tuple(p for p in self.bar(color).pieces if p.color == color)
+    def bar_pieces(self, piece_color):
+        return tuple(
+            p for p in self.bar(piece_color).pieces if
+            p.color == piece_color
+        )
 
-    def outer(self, color):
-        return self.points[0 if color == color.RED else 25]
+    def outer(self, piece_color):
+        return self.points[0 if piece_color == color.RED else 25]
 
-    def outer_pieces(self, color):
-        return tuple(p for p in self.outer(color).pieces if p.color == color)
+    def outer_pieces(self, piece_color):
+        return tuple(
+            p for p in self.outer(piece_color).pieces if
+            p.color == piece_color
+        )
 
-    def strongholds(self, color):
-        return [p for p in self.points if p.color == color and len(p.pieces) > 1]
+    def strongholds(self, piece_color):
+        return [p for p in self.points if p.color == piece_color and len(p.pieces) > 1]
 
-    def saved_pieces(self, color):
-        if color == color.WHITE:
+    def saved_pieces(self, piece_color):
+        if piece_color == color.WHITE:
             enemy = color.RED
             behind = operator.gt
             last_point = max(i for i in range(25, 1, -1)
@@ -215,20 +221,20 @@ class Board:
             enemy_line = self.points[last_point]
         return [p for p in self.points if behind(p, enemy_line) and p.pieces]
 
-    def exposed_pieces(self, color):
-        saved = self.saved_pieces(color)
-        bar = self.bar(color)
+    def exposed_pieces(self, piece_color):
+        saved = self.saved_pieces(piece_color)
+        bar = self.bar(piece_color)
         return [p for p in self.points if
-                p.color == color and
+                p.color == piece_color and
                 len(p.pieces) == 1 and
                 p not in saved and
                 p != bar]
 
-    def _on_start(self, color, start_state):
+    def _on_start(self, piece_color, start_state):
         number = 1
         for point, count in start_state:
             for i in range(count):
-                self.points[point].push(Piece(color, number))
+                self.points[point].push(Piece(piece_color, number))
                 number += 1
 
 
