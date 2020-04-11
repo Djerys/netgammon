@@ -13,6 +13,8 @@ RED_PIECE_IMAGE = 'assets/image/black_checker.png'
 WHITE_FROM_IMAGE = 'assets/image/white_from_point.png'
 RED_FROM_IMAGE = 'assets/image/red_from_point.png'
 
+TO_IMAGE = 'assets/image/to_point.png'
+
 DICE_IMAGES = {
     1: 'assets/image/dice_1.png',
     2: 'assets/image/dice_2.png',

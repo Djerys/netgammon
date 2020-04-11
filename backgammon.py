@@ -56,20 +56,22 @@ class EventSystem(ecys.System):
             if event.type == pygame.QUIT:
                 self._handle_close_window()
 
-            if event.type == pygame.MOUSEBUTTONUP:
-                self._handle_press_on_point(event.pos)
+            if (event.type == pygame.MOUSEBUTTONUP and
+                    event.button == pygame.BUTTON_LEFT):
+                self._handle_point_press(event.pos)
 
     @staticmethod
     def _handle_close_window():
         pygame.quit()
         sys.exit()
 
-    def _handle_press_on_point(self, position):
+    def _handle_point_press(self, position):
         entities = self.world.entities_with(PointEventComponent, RenderComponent)
         for entity in entities:
             event = entity.get_component(PointEventComponent)
             render = entity.get_component(RenderComponent)
             render.visible = False
+            event.clicked = False
             if render.rect.collidepoint(position):
                 event.clicked = True
 
@@ -85,10 +87,15 @@ class HintSystem(ecys.System):
         if from_point is None:
             return
         render = from_point.get_component(RenderComponent)
-        render.visible = True
         number = from_point.get_component(PointNumberComponent).value
-        possible_points = self.game.board.possible_moves(self.game.roll, number)
-        self._make_visible_possibles(possible_points)
+        try:
+            possible_points = self.game.board.possible_moves(
+                self.game.roll, number
+            )
+            render.visible = True
+            self._make_visible_possibles(possible_points)
+        except AssertionError:
+            pass
 
     def _from_point(self):
         for entity in self.entities:
@@ -100,7 +107,9 @@ class HintSystem(ecys.System):
     def _make_visible_possibles(self, possible_points):
         for entity in self.entities:
             number = entity.get_component(PointNumberComponent).value
-            if number in possible_points:
+            event = entity.get_component(PointEventComponent)
+            if (event.type == PointEventComponent.TO and
+                    number in possible_points):
                 render = entity.get_component(RenderComponent)
                 render.visible = True
 
@@ -135,11 +144,16 @@ class Backgammon(Game):
         world.add_system(EventSystem(), priority=2)
         world.add_system((HintSystem(self)), priority=1)
         world.add_system(render_system,  priority=0)
-        self._create_from_points(world)
+        self._create_points(world)
         return world
 
     def _update_world(self):
         self.world.update()
+
+    @staticmethod
+    def _create_points(world):
+        Backgammon._create_from_points(world)
+        Backgammon._create_to_points(world)
 
     @staticmethod
     def _create_from_points(world):
@@ -150,6 +164,16 @@ class Backgammon(Game):
             world.create_entity(
                 RenderComponent(image, graphic.FROM_COORDS[i]),
                 PointEventComponent(PointEventComponent.FROM),
+                PointNumberComponent(i)
+            )
+
+    @staticmethod
+    def _create_to_points(world):
+        image = config.TO_IMAGE
+        for i in range(0, 26):
+            world.create_entity(
+                RenderComponent(image, graphic.TO_COORDS[i], True),
+                PointEventComponent(PointEventComponent.TO),
                 PointNumberComponent(i)
             )
 

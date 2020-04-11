@@ -123,8 +123,8 @@ class Board:
         assert 0 <= to_point <= 25, f'Valid points are [0..25]: {to_point}'
         to_point = self.points[to_point]
         bear_off = to_point in {
-            self.outer(color.WHITE),
-            self.outer(color.RED)
+            self.bear_off(color.WHITE),
+            self.bear_off(color.RED)
         }
         if not bear_off:
             assert not to_point.blocked(from_point.color), \
@@ -180,9 +180,9 @@ class Board:
         return True
 
     def finished(self):
-        outer_whites = [p for p in self.outer(color.WHITE).pieces if
+        outer_whites = [p for p in self.bear_off(color.WHITE).pieces if
                         p.color == color.WHITE]
-        outer_reds = [p for p in self.outer(color.RED).pieces if
+        outer_reds = [p for p in self.bear_off(color.RED).pieces if
                       p.color == color.RED]
         return len(outer_whites) == 15 or len(outer_reds) == 15
 
@@ -195,12 +195,12 @@ class Board:
             p.color == piece_color
         )
 
-    def outer(self, piece_color):
+    def bear_off(self, piece_color):
         return self.points[0 if piece_color == color.RED else 25]
 
-    def outer_pieces(self, piece_color):
+    def bear_off_pieces(self, piece_color):
         return tuple(
-            p for p in self.outer(piece_color).pieces if
+            p for p in self.bear_off(piece_color).pieces if
             p.color == piece_color
         )
 
