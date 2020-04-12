@@ -10,18 +10,13 @@ class Game(ABC):
         self.surface = pygame.display.set_mode((width, height))
         pygame.display.set_caption(caption)
         self.clock = pygame.time.Clock()
-        self.world = self._create_world()
 
     def run(self):
         while not self.game_over:
-            self._update_world()
+            self._update()
 
             self.clock.tick(self.frame_rate)
 
     @abstractmethod
-    def _create_world(self):
-        pass
-
-    @abstractmethod
-    def _update_world(self):
+    def _update(self):
         pass

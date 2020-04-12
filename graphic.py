@@ -3,28 +3,58 @@ from dataclasses import dataclass
 
 
 @dataclass
-class PointCoordinates(ABC):
+class Coordinates(ABC):
     width: int
     height: int
     red_y: int
     white_y: int
-    home_x: int = 273
-    outer_x: int = 23
+    home_x: int
+    outer_x: int
     x_step: int = 35
 
-    def __getitem__(self, point_number):
-        if 1 <= point_number <= 6:
-            x = self.home_x + (6 - point_number) * self.x_step
+    @abstractmethod
+    def __getitem__(self, point):
+        if 1 <= point <= 6:
+            x = self.home_x + (6 - point) * self.x_step
             return x, self.red_y
-        if 7 <= point_number <= 12:
-            x = self.outer_x + (12 - point_number) * self.x_step
+        if 7 <= point <= 12:
+            x = self.outer_x + (12 - point) * self.x_step
             return x, self.red_y
-        if 13 <= point_number <= 18:
-            x = self.outer_x + (point_number - 13) * self.x_step
+        if 13 <= point <= 18:
+            x = self.outer_x + (point - 13) * self.x_step
             return x, self.white_y
-        if 19 <= point_number <= 24:
-            x = self.home_x + (point_number - 19) * self.x_step
+        if 19 <= point <= 24:
+            x = self.home_x + (point - 19) * self.x_step
             return x, self.white_y
+
+    @staticmethod
+    def _assert_point(point):
+        assert 0 <= point <= 25, \
+            f'Number of source point in [0..25]: {point}'
+
+
+@dataclass
+class PointPiecesCoordinates(Coordinates):
+    width: int = 26
+    height: int = 26
+    red_y: int = 43
+    white_y: int = 530
+    home_x: int = 275
+    outer_x: int = 25
+
+    def __getitem__(self, item):
+        point, piece_pos = item
+        self._assert_point(point)
+        piece_pos = piece_pos if point in range(13) else -piece_pos
+        x, y = super().__getitem__(point)
+        y += piece_pos * self.height
+        return x, y
+
+
+@dataclass
+class PointCoordinates(Coordinates):
+    home_x: int = 273
+    outer_x: int = 23
 
 
 @dataclass
@@ -33,11 +63,15 @@ class FromPointCoordinates(PointCoordinates):
     height: int = 210
     red_y: int = 15
     white_y: int = 375
+    bar_x: int = 250
 
-    def __getitem__(self, point_number):
-        assert 1 <= point_number <= 24, \
-            f'Number of source point in [1..24]: {point_number}'
-        return super().__getitem__(point_number)
+    def __getitem__(self, point):
+        self._assert_point(point)
+        if point == 0:
+            return self.bar_x, self.white_y
+        elif point == 25:
+            return self.bar_x, self.red_y
+        return super().__getitem__(point)
 
 
 @dataclass
@@ -49,13 +83,13 @@ class ToPointCoordinates(PointCoordinates):
     bear_off_x: int = 455
     bear_off_y: int = 285
 
-    def __getitem__(self, point_number):
-        assert 0 <= point_number <= 25,\
-            f'Number of destiny point in [0.25]: {point_number}'
-        if point_number in (0, 25):
+    def __getitem__(self, point):
+        self._assert_point(point)
+        if point in {0, 25}:
             return self.bear_off_x, self.bear_off_y
-        return super().__getitem__(point_number)
+        return super().__getitem__(point)
 
 
 FROM_COORDS = FromPointCoordinates()
 TO_COORDS = ToPointCoordinates()
+PIECE_COORDS = PointPiecesCoordinates()
