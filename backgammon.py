@@ -1,187 +1,14 @@
-import sys
-from dataclasses import dataclass
+from copy import deepcopy
 
-import pygame
 import ecys
 
 import logic
 import config
 import color
 import graphic
+import system as s
+import component as c
 from game import Game
-
-
-class RenderComponent(ecys.Component):
-    def __init__(self, image_filename=None, coords=(0, 0), visible=False):
-        if image_filename:
-            self._image = pygame.image.load(image_filename)
-            self.rect = self._image.get_rect()
-            self.rect.x, self.rect.y = coords
-        else:
-            self.rect = pygame.Rect(coords, (1, 1))
-        self.visible = visible
-
-    @property
-    def image(self):
-        return self._image
-
-    @image.setter
-    def image(self, image_filename):
-        self._image = pygame.image.load(image_filename)
-        x, y = self.rect.x, self.rect.y
-        self.rect = self._image.get_rect()
-        self.rect.x, self.rect.y = x, y
-
-
-class PointInputComponent(ecys.Component):
-    FROM = 1
-    TO = 2
-
-    def __init__(self, type, clicked=False):
-        self.type = type
-        self.clicked = clicked
-
-
-@dataclass
-class DieComponent(ecys.Component):
-    color: int
-    number: int
-
-
-@ecys.requires(RenderComponent, DieComponent)
-class ArrangeDiesSystem(ecys.System):
-    def __init__(self, game):
-        super().__init__()
-        self.game = game
-
-    def update(self):
-        for entity in self.entities:
-            render = entity.get_component(RenderComponent)
-            die = entity.get_component(DieComponent)
-            if self.game.color == die.color:
-                render.visible = True
-                if die.number == 1:
-                    render.image = config.DICE_IMAGES[self.game.roll.die1]
-                elif die.number == 2:
-                    render.image = config.DICE_IMAGES[self.game.roll.die2]
-
-
-@ecys.requires(RenderComponent, logic.Piece)
-class ArrangePiecesSystem(ecys.System):
-    def __init__(self, game):
-        super().__init__()
-        self.game = game
-
-    def update(self):
-        for point in game.board.points[1:25]:
-            piece_number = 0
-            for piece in point.pieces:
-                piece_entity = self._piece_entity(piece)
-                render = piece_entity.get_component(RenderComponent)
-                render.rect.x, render.rect.y = graphic.PIECE_COORDS[
-                    point.number,
-                    piece_number
-                ]
-                render.visible = True
-                piece_number += 1
-
-    def _piece_entity(self, piece):
-        entities = self.world.entities_with(logic.Piece)
-        for entity in entities:
-            if piece == entity.get_component(logic.Piece):
-                return entity
-
-
-@ecys.requires(RenderComponent)
-class RenderSystem(ecys.System):
-    def __init__(self, surface, background_filename):
-        super().__init__()
-        self.surface = surface
-        self.background_image = pygame.image.load(background_filename)
-
-    def update(self):
-        self.surface.blit(self.background_image, (0, 0))
-        for entity in self.entities:
-            render = entity.get_component(RenderComponent)
-            if render.visible:
-                self.surface.blit(render.image, render.rect)
-        pygame.display.update()
-
-
-class InputSystem(ecys.System):
-    def update(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self._handle_close_window()
-
-            if (event.type == pygame.MOUSEBUTTONUP and
-                    event.button == pygame.BUTTON_LEFT):
-                self._handle_point_press(event.pos)
-
-    @staticmethod
-    def _handle_close_window():
-        pygame.quit()
-        sys.exit()
-
-    def _handle_point_press(self, position):
-        entities = self.world.entities_with(PointInputComponent, RenderComponent)
-        for entity in entities:
-            event = entity.get_component(PointInputComponent)
-            render = entity.get_component(RenderComponent)
-            event.clicked = False
-            if render.rect.collidepoint(position):
-                event.clicked = True
-
-
-class RollSystem(ecys.System):
-    def __init__(self, game):
-        super().__init__()
-        self.game = game
-
-    def update(self):
-        if not self.game.history or not self.game.roll.dies:
-            self.game.roll_dice()
-
-
-@ecys.requires(PointInputComponent, RenderComponent, logic.Point)
-class HintSystem(ecys.System):
-    def __init__(self, game):
-        super().__init__()
-        self.game = game
-
-    def update(self):
-        point_entity = self._from_point()
-        if point_entity is None:
-            return
-        point = point_entity.get_component(logic.Point)
-        render = point_entity.get_component(RenderComponent)
-        try:
-            possible_points = self.game.board.possible_moves(
-                self.game.roll, point.number
-            )
-            render.visible = True
-            self._make_visible_possibles(possible_points)
-        except AssertionError:
-            pass
-
-    def _from_point(self):
-        point = None
-        for entity in self.entities:
-            event = entity.get_component(PointInputComponent)
-            render = entity.get_component(RenderComponent)
-            render.visible = False
-            if event.type == PointInputComponent.FROM and event.clicked:
-                point = entity
-        return point
-
-    def _make_visible_possibles(self, possible_points):
-        for entity in self.entities:
-            number = entity.get_component(logic.Point).number
-            event = entity.get_component(PointInputComponent)
-            if (event.type == PointInputComponent.TO and
-                    number in possible_points):
-                render = entity.get_component(RenderComponent)
-                render.visible = True
 
 
 class Backgammon(Game):
@@ -193,6 +20,8 @@ class Backgammon(Game):
         self.board = logic.Board()
         self.history = []
         self.world = self._create_world()
+        self.players = {}
+        self.current_turn = None
 
     @property
     def roll(self):
@@ -208,15 +37,16 @@ class Backgammon(Game):
 
     def roll_dice(self, roll=None):
         self.history.append(logic.Turn(roll or logic.Roll(), []))
+        self.current_turn = deepcopy(self.history[-1])
 
     def _create_world(self):
         world = ecys.World()
-        render_system = RenderSystem(self.surface, config.BACKGROUND_IMAGE)
-        world.add_system(RollSystem(self), priority=5)
-        world.add_system(ArrangeDiesSystem(self), priority=4)
-        world.add_system(ArrangePiecesSystem(self), priority=3)
-        world.add_system(InputSystem(), priority=2)
-        world.add_system(HintSystem(self), priority=1)
+        render_system = s.RenderSystem(self.surface, config.BACKGROUND_IMAGE)
+        world.add_system(s.RollSystem(self), priority=5)
+        world.add_system(s.ArrangeDiesSystem(self), priority=4)
+        world.add_system(s.ArrangePiecesSystem(self), priority=3)
+        world.add_system(s.InputSystem(self), priority=2)
+        world.add_system(s.HintSystem(self), priority=1)
         world.add_system(render_system,  priority=0)
         self._create_points(world)
         self._create_pieces(world)
@@ -229,20 +59,20 @@ class Backgammon(Game):
     @staticmethod
     def _create_dies(world):
         world.create_entity(
-            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 1]),
-            DieComponent(color.RED, 1)
+            c.Render(coords=graphic.DICE_COORDS[color.RED, 1]),
+            c.Die(color.RED, 1)
         )
         world.create_entity(
-            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 2]),
-            DieComponent(color.RED, 2)
+            c.Render(coords=graphic.DICE_COORDS[color.RED, 2]),
+            c.Die(color.RED, 2)
         )
         world.create_entity(
-            RenderComponent(coords=graphic.DICE_COORDS[color.WHITE, 1]),
-            DieComponent(color.WHITE, 1)
+            c.Render(coords=graphic.DICE_COORDS[color.WHITE, 1]),
+            c.Die(color.WHITE, 1)
         )
         world.create_entity(
-            RenderComponent(coords=graphic.DICE_COORDS[color.WHITE, 2]),
-            DieComponent(color.WHITE, 2)
+            c.Render(coords=graphic.DICE_COORDS[color.WHITE, 2]),
+            c.Die(color.WHITE, 2)
         )
 
     def _create_pieces(self, world):
@@ -253,7 +83,7 @@ class Backgammon(Game):
                 else:
                     image = config.WHITE_PIECE_IMAGE
                 world.create_entity(
-                    RenderComponent(image),
+                    c.Render(image),
                     piece
                 )
 
@@ -267,8 +97,8 @@ class Backgammon(Game):
             if point.number >= 13:
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
-                RenderComponent(image, graphic.FROM_COORDS[point.number]),
-                PointInputComponent(PointInputComponent.FROM),
+                c.Render(image, graphic.FROM_COORDS[point.number]),
+                c.FromPointInput(),
                 point
             )
 
@@ -276,14 +106,12 @@ class Backgammon(Game):
         image = config.TO_IMAGE
         for point in self.board.points:
             world.create_entity(
-                RenderComponent(image, graphic.TO_COORDS[point.number]),
-                PointInputComponent(PointInputComponent.TO),
+                c.Render(image, graphic.TO_COORDS[point.number]),
+                c.ToPoint(),
                 point
             )
 
 
 if __name__ == '__main__':
     game = Backgammon()
-    # game.roll_dice()
-    # print(game.roll)
     game.run()

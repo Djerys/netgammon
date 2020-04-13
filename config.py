@@ -15,7 +15,7 @@ RED_FROM_IMAGE = 'assets/image/red_from_point.png'
 
 TO_IMAGE = 'assets/image/to_point.png'
 
-DICE_IMAGES = {
+DIE_IMAGES = {
     1: 'assets/image/dice_1.png',
     2: 'assets/image/dice_2.png',
     3: 'assets/image/dice_3.png',
