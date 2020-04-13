@@ -35,6 +35,19 @@ class Backgammon(Game):
     def moves(self):
         return self.history[-1].moves
 
+    @property
+    def possible_points(self):
+        bar = self.board.bar(self.color)
+        if bar.pieces:
+            return [bar]
+        points = [p for p in self.board.points]
+        possible_points_ = []
+        for point in points:
+            if (point.pieces and point.color == self.color
+                    and self.board.possible_moves(self.roll, point)):
+                possible_points_.append(point)
+        return possible_points_
+
     def move(self, from_point, to_point):
         if isinstance(from_point, logic.Point):
             from_point = from_point.number
@@ -124,4 +137,5 @@ class Backgammon(Game):
 
 if __name__ == '__main__':
     game = Backgammon()
+    game.roll_dice(logic.Roll(2, 5))
     game.run()

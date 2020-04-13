@@ -102,7 +102,8 @@ class InputSystem(ecys.System):
             render = entity.get_component(c.Render)
             point = entity.get_component(logic.Point)
             if (render.rect.collidepoint(position) and
-                    point.color == self.game.color):
+                    point in self.game.possible_points):
+                render.visible = True
                 self._make_to_points_invisible()
                 input.clicked = True
                 self.clicked_from = (input, render, point)
@@ -149,7 +150,9 @@ class RollSystem(ecys.System):
         self.game = game
 
     def update(self):
-        if not self.game.history or not self.game.roll.dies:
+        if (not self.game.history or
+                not self.game.roll.dies or
+                not self.game.possible_points):
             self.game.roll_dice()
 
 
@@ -163,12 +166,10 @@ class HintSystem(ecys.System):
         if not point_entity:
             return
         point = point_entity.get_component(logic.Point)
-        render = point_entity.get_component(c.Render)
         try:
             possible_points = self.game.board.possible_moves(
                 self.game.roll, point.number
             )
-            render.visible = True
             self._make_visible_possibles(possible_points)
         except AssertionError:
             pass

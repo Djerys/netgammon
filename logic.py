@@ -77,9 +77,9 @@ class Point:
         assert self._pieces, 'No pieces at this Point'
         return self._pieces.pop()
 
-    def blocked(self, color):
+    def blocked(self, piece_color):
         return (self.number not in {0, 25} and
-                color != self.color and
+                piece_color != self.color and
                 len(self._pieces) > 1)
 
     @property
