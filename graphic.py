@@ -18,9 +18,9 @@ class Coordinates(ABC):
 class DiceCoordinates(Coordinates):
     width: int = 30
     height: int = 30
-    red_x1: int = 330
+    red_x1: int = 320
     red_x2: int = 360
-    white_x1: int = 110
+    white_x1: int = 100
     white_x2: int = 140
     y: int = 270
 

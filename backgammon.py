@@ -13,7 +13,7 @@ from game import Game
 
 class RenderComponent(ecys.Component):
     def __init__(self, image_filename=None, coords=(0, 0), visible=False):
-        if self._image:
+        if image_filename:
             self._image = pygame.image.load(image_filename)
             self.rect = self._image.get_rect()
             self.rect.x, self.rect.y = coords
@@ -26,8 +26,8 @@ class RenderComponent(ecys.Component):
         return self._image
 
     @image.setter
-    def image(self, value):
-        self._image = value
+    def image(self, image_filename):
+        self._image = pygame.image.load(image_filename)
         x, y = self.rect.x, self.rect.y
         self.rect = self._image.get_rect()
         self.rect.x, self.rect.y = x, y
@@ -43,9 +43,27 @@ class PointEventComponent(ecys.Component):
 
 
 @dataclass
-class DiceComponent(ecys.Component):
+class DieComponent(ecys.Component):
     color: int
-    value: int
+    number: int
+
+
+@ecys.requires(RenderComponent, DieComponent)
+class ArrangeDiesSystem(ecys.System):
+    def __init__(self, game):
+        super().__init__()
+        self.game = game
+
+    def update(self):
+        for entity in self.entities:
+            render = entity.get_component(RenderComponent)
+            die = entity.get_component(DieComponent)
+            if self.game.color == die.color:
+                render.visible = True
+                if die.number == 1:
+                    render.image = config.DICE_IMAGES[self.game.roll.die1]
+                elif die.number == 2:
+                    render.image = config.DICE_IMAGES[self.game.roll.die2]
 
 
 @ecys.requires(RenderComponent, logic.Piece)
@@ -184,25 +202,37 @@ class Backgammon(Game):
     def _create_world(self):
         world = ecys.World()
         render_system = RenderSystem(self.surface, config.BACKGROUND_IMAGE)
+        world.add_system(ArrangeDiesSystem(self), priority=4)
         world.add_system(ArrangePiecesSystem(self), priority=3)
         world.add_system(EventSystem(), priority=2)
         world.add_system((HintSystem(self)), priority=1)
         world.add_system(render_system,  priority=0)
         self._create_points(world)
         self._create_pieces(world)
-        self._create_dices(world)
+        self._create_dies(world)
         return world
 
     def _update(self):
         self.world.update()
 
     @staticmethod
-    def _create_dices(world):
+    def _create_dies(world):
         world.create_entity(
-            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 1], True),
-            DiceComponent(color.RED, 1)
+            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 1]),
+            DieComponent(color.RED, 1)
         )
-        print(DiceComponent(color.RED, 1))
+        world.create_entity(
+            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 2]),
+            DieComponent(color.RED, 2)
+        )
+        world.create_entity(
+            RenderComponent(coords=graphic.DICE_COORDS[color.WHITE, 1]),
+            DieComponent(color.WHITE, 1)
+        )
+        world.create_entity(
+            RenderComponent(coords=graphic.DICE_COORDS[color.WHITE, 2]),
+            DieComponent(color.WHITE, 2)
+        )
 
     def _create_pieces(self, world):
         for point in self.board.points:
