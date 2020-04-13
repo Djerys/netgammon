@@ -14,7 +14,6 @@ class Game(ABC):
     def run(self):
         while not self.game_over:
             self._update()
-
             self.clock.tick(self.frame_rate)
 
     @abstractmethod
