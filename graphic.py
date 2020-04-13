@@ -103,7 +103,7 @@ class ToPointCoordinates(PointCoordinates):
         return super().__getitem__(point)
 
 
+DICE_COORDS = DiceCoordinates()
 FROM_COORDS = FromPointCoordinates()
 TO_COORDS = ToPointCoordinates()
 PIECE_COORDS = PointPiecesCoordinates()
-DICE_COORDS = DiceCoordinates()
