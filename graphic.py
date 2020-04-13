@@ -27,14 +27,14 @@ class DiceCoordinates(Coordinates):
     def __getitem__(self, item):
         dice_color, dice = item
         if dice_color == color.RED:
-            if dice == 0:
+            if dice == 1:
                 return self.red_x1, self.y
-            elif dice == 1:
+            elif dice == 2:
                 return self.red_x2, self.y
         elif dice_color == color.WHITE:
-            if dice == 0:
+            if dice == 1:
                 return self.white_x1, self.y
-            elif dice == 1:
+            elif dice == 2:
                 return self.white_x2, self.y
 
 

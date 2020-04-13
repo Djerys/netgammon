@@ -12,10 +12,13 @@ from game import Game
 
 
 class RenderComponent(ecys.Component):
-    def __init__(self, image_filename, coords=(0, 0), visible=False):
-        self._image = pygame.image.load(image_filename)
-        self.rect = self._image.get_rect()
-        self.rect.x, self.rect.y = coords
+    def __init__(self, image_filename=None, coords=(0, 0), visible=False):
+        if self._image:
+            self._image = pygame.image.load(image_filename)
+            self.rect = self._image.get_rect()
+            self.rect.x, self.rect.y = coords
+        else:
+            self.rect = pygame.Rect(coords, (1, 1))
         self.visible = visible
 
     @property
@@ -37,6 +40,12 @@ class PointEventComponent(ecys.Component):
     def __init__(self, type, clicked=False):
         self.type = type
         self.clicked = clicked
+
+
+@dataclass
+class DiceComponent(ecys.Component):
+    color: int
+    value: int
 
 
 @ecys.requires(RenderComponent, logic.Piece)
@@ -181,16 +190,19 @@ class Backgammon(Game):
         world.add_system(render_system,  priority=0)
         self._create_points(world)
         self._create_pieces(world)
+        self._create_dices(world)
         return world
 
     def _update(self):
         self.world.update()
 
-    def _create_dices(self, world):
+    @staticmethod
+    def _create_dices(world):
         world.create_entity(
-            RenderComponent(config.DICE_IMAGES[0], graphic.DICE_COORDS[color.RED, 0], True),
-            logic.Roll
+            RenderComponent(coords=graphic.DICE_COORDS[color.RED, 1], True),
+            DiceComponent(color.RED, 1)
         )
+        print(DiceComponent(color.RED, 1))
 
     def _create_pieces(self, world):
         for point in self.board.points:
