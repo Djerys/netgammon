@@ -13,11 +13,21 @@ from game import Game
 
 class RenderComponent(ecys.Component):
     def __init__(self, image_filename, coords=(0, 0), visible=False):
-        self.image = pygame.image.load(image_filename)
-        self.rect = self.image.get_rect()
-        self.rect.x = coords[0]
-        self.rect.y = coords[1]
+        self._image = pygame.image.load(image_filename)
+        self.rect = self._image.get_rect()
+        self.rect.x, self.rect.y = coords
         self.visible = visible
+
+    @property
+    def image(self):
+        return self._image
+
+    @image.setter
+    def image(self, value):
+        self._image = value
+        x, y = self.rect.x, self.rect.y
+        self.rect = self._image.get_rect()
+        self.rect.x, self.rect.y = x, y
 
 
 class PointEventComponent(ecys.Component):
@@ -175,6 +185,12 @@ class Backgammon(Game):
 
     def _update(self):
         self.world.update()
+
+    def _create_dices(self, world):
+        world.create_entity(
+            RenderComponent(config.DICE_IMAGES[0], graphic.DICE_COORDS[color.RED, 0], True),
+            logic.Roll
+        )
 
     def _create_pieces(self, world):
         for point in self.board.points:
