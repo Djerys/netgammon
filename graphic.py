@@ -4,11 +4,7 @@ from dataclasses import dataclass
 import color
 
 
-@dataclass
 class Coordinates(ABC):
-    width: int
-    height: int
-
     @abstractmethod
     def __getitem__(self, item):
         pass
@@ -16,13 +12,11 @@ class Coordinates(ABC):
 
 @dataclass
 class DiceCoordinates(Coordinates):
-    width: int = 30
-    height: int = 30
-    red_x1: int = 320
-    red_x2: int = 360
-    white_x1: int = 100
-    white_x2: int = 140
-    y: int = 270
+    red_x1: int = 342
+    red_x2: int = 380
+    white_x1: int = 92
+    white_x2: int = 130
+    y: int = 286
 
     def __getitem__(self, item):
         dice_color, dice = item

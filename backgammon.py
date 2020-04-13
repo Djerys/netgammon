@@ -273,6 +273,6 @@ class Backgammon(Game):
 
 if __name__ == '__main__':
     game = Backgammon()
-    game.roll_dice()
+    game.roll_dice(logic.Roll(1, 6))
     print(game.roll)
     game.run()
