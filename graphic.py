@@ -58,7 +58,6 @@ class PointCoordinates(Coordinates):
 
 @dataclass
 class PointPiecesCoordinates(PointCoordinates):
-    width: int = 26
     height: int = 26
     red_y: int = 43
     white_y: int = 530
@@ -75,8 +74,6 @@ class PointPiecesCoordinates(PointCoordinates):
 
 @dataclass
 class FromPointCoordinates(PointCoordinates):
-    width: int = 30
-    height: int = 210
     home_x: int = 273
     outer_x: int = 23
     red_y: int = 15
@@ -93,8 +90,6 @@ class FromPointCoordinates(PointCoordinates):
 
 @dataclass
 class ToPointCoordinates(PointCoordinates):
-    width: int = 30
-    height: int = 30
     home_x: int = 273
     outer_x: int = 23
     red_y: int = 247
