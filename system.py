@@ -6,6 +6,7 @@ import ecys
 import config
 import logic
 import graphic
+import color
 import component as c
 
 
@@ -22,9 +23,11 @@ class ArrangeDiesSystem(ecys.System):
             if self.game.color == die.color:
                 render.visible = True
                 if die.number == 1:
-                    render.image = config.DIE_IMAGES[self.game.roll.die1]
+                    render.image = config.DIE_IMAGES[die.color][self.game.roll.die1]
                 elif die.number == 2:
-                    render.image = config.DIE_IMAGES[self.game.roll.die2]
+                    render.image = config.DIE_IMAGES[die.color][self.game.roll.die2]
+            else:
+                render.visible = False
 
 
 @ecys.requires(c.Render, logic.Piece)
@@ -122,11 +125,12 @@ class InputSystem(ecys.System):
             if (render.rect.collidepoint(position) and
                     render.visible and
                     self.clicked_from):
+                point = entity.get_component(logic.Point)
+                self.game.move(self.clicked_from[2], point)
                 self.clicked_from[0].clicked = False
                 self.clicked_from[1].visible = False
                 self.clicked_from = None
                 clicked = True
-                point = entity.get_component(logic.Point)
 
         if clicked:
             for render in renders:

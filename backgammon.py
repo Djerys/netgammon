@@ -35,6 +35,16 @@ class Backgammon(Game):
     def moves(self):
         return self.history[-1].moves
 
+    def move(self, from_point, to_point):
+        if isinstance(from_point, logic.Point):
+            from_point = from_point.number
+        if isinstance(to_point, logic.Point):
+            to_point = to_point.number
+        self.board.move(from_point, to_point)
+        dies = abs(from_point - to_point)
+        self.roll.use(dies)
+        self.moves.append((from_point, to_point))
+
     def roll_dice(self, roll=None):
         self.history.append(logic.Turn(roll or logic.Roll(), []))
         self.current_turn = deepcopy(self.history[-1])
