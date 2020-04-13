@@ -33,7 +33,7 @@ class RenderComponent(ecys.Component):
         self.rect.x, self.rect.y = x, y
 
 
-class PointEventComponent(ecys.Component):
+class PointInputComponent(ecys.Component):
     FROM = 1
     TO = 2
 
@@ -108,7 +108,7 @@ class RenderSystem(ecys.System):
         pygame.display.update()
 
 
-class EventSystem(ecys.System):
+class InputSystem(ecys.System):
     def update(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -124,30 +124,40 @@ class EventSystem(ecys.System):
         sys.exit()
 
     def _handle_point_press(self, position):
-        entities = self.world.entities_with(PointEventComponent, RenderComponent)
+        entities = self.world.entities_with(PointInputComponent, RenderComponent)
         for entity in entities:
-            event = entity.get_component(PointEventComponent)
+            event = entity.get_component(PointInputComponent)
             render = entity.get_component(RenderComponent)
             event.clicked = False
             if render.rect.collidepoint(position):
                 event.clicked = True
 
 
-@ecys.requires(PointEventComponent, RenderComponent, logic.Point)
+class RollSystem(ecys.System):
+    def __init__(self, game):
+        super().__init__()
+        self.game = game
+
+    def update(self):
+        if not self.game.history or not self.game.roll.dies:
+            self.game.roll_dice()
+
+
+@ecys.requires(PointInputComponent, RenderComponent, logic.Point)
 class HintSystem(ecys.System):
     def __init__(self, game):
         super().__init__()
         self.game = game
 
     def update(self):
-        from_point = self._from_point()
-        if from_point is None:
+        point_entity = self._from_point()
+        if point_entity is None:
             return
-        render = from_point.get_component(RenderComponent)
-        number = from_point.get_component(logic.Point).number
+        point = point_entity.get_component(logic.Point)
+        render = point_entity.get_component(RenderComponent)
         try:
             possible_points = self.game.board.possible_moves(
-                self.game.roll, number
+                self.game.roll, point.number
             )
             render.visible = True
             self._make_visible_possibles(possible_points)
@@ -157,18 +167,18 @@ class HintSystem(ecys.System):
     def _from_point(self):
         point = None
         for entity in self.entities:
-            event = entity.get_component(PointEventComponent)
+            event = entity.get_component(PointInputComponent)
             render = entity.get_component(RenderComponent)
             render.visible = False
-            if event.type == PointEventComponent.FROM and event.clicked:
+            if event.type == PointInputComponent.FROM and event.clicked:
                 point = entity
         return point
 
     def _make_visible_possibles(self, possible_points):
         for entity in self.entities:
             number = entity.get_component(logic.Point).number
-            event = entity.get_component(PointEventComponent)
-            if (event.type == PointEventComponent.TO and
+            event = entity.get_component(PointInputComponent)
+            if (event.type == PointInputComponent.TO and
                     number in possible_points):
                 render = entity.get_component(RenderComponent)
                 render.visible = True
@@ -202,10 +212,11 @@ class Backgammon(Game):
     def _create_world(self):
         world = ecys.World()
         render_system = RenderSystem(self.surface, config.BACKGROUND_IMAGE)
+        world.add_system(RollSystem(self), priority=5)
         world.add_system(ArrangeDiesSystem(self), priority=4)
         world.add_system(ArrangePiecesSystem(self), priority=3)
-        world.add_system(EventSystem(), priority=2)
-        world.add_system((HintSystem(self)), priority=1)
+        world.add_system(InputSystem(), priority=2)
+        world.add_system(HintSystem(self), priority=1)
         world.add_system(render_system,  priority=0)
         self._create_points(world)
         self._create_pieces(world)
@@ -257,7 +268,7 @@ class Backgammon(Game):
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
                 RenderComponent(image, graphic.FROM_COORDS[point.number]),
-                PointEventComponent(PointEventComponent.FROM),
+                PointInputComponent(PointInputComponent.FROM),
                 point
             )
 
@@ -266,13 +277,13 @@ class Backgammon(Game):
         for point in self.board.points:
             world.create_entity(
                 RenderComponent(image, graphic.TO_COORDS[point.number]),
-                PointEventComponent(PointEventComponent.TO),
+                PointInputComponent(PointInputComponent.TO),
                 point
             )
 
 
 if __name__ == '__main__':
     game = Backgammon()
-    game.roll_dice(logic.Roll(1, 6))
-    print(game.roll)
+    # game.roll_dice()
+    # print(game.roll)
     game.run()
