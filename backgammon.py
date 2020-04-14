@@ -21,7 +21,6 @@ class Backgammon(Game):
         self.history = []
         self.world = self._create_world()
         self.players = {}
-        self.current_turn = None
 
     @property
     def roll(self):
@@ -60,7 +59,6 @@ class Backgammon(Game):
 
     def roll_dice(self, roll=None):
         self.history.append(logic.Turn(roll or logic.Roll(), []))
-        self.current_turn = deepcopy(self.history[-1])
 
     def _create_world(self):
         world = ecys.World()

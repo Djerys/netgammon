@@ -27,13 +27,6 @@ class Render(ecys.Component):
 
 
 @dataclass
-class Move(ecys.Component):
-    color: str
-    from_point_number: int
-    to_point_number: int
-
-
-@dataclass
 class FromPointInput(ecys.Component):
     clicked: bool = False
 

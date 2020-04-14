@@ -270,7 +270,7 @@ class Roll:
         if move in dies_to_use:
             dies_to_use.remove(move)
         else:
-            while dies_to_use and move > max(dies_to_use):
+            while dies_to_use and move >= max(dies_to_use):
                 move -= dies_to_use.pop()
             if move != 0:
                 raise ValueError('Impossible move')
