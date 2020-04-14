@@ -78,13 +78,13 @@ class FromPointCoordinates(PointCoordinates):
     outer_x: int = 23
     red_y: int = 15
     white_y: int = 375
-    bar_x: int = 250
+    bar_x: int = 235
 
     def __getitem__(self, point):
         if point == 0:
-            return self.bar_x, self.white_y
-        elif point == 25:
             return self.bar_x, self.red_y
+        elif point == 25:
+            return self.bar_x, self.white_y
         return super().__getitem__(point)
 
 
