@@ -35,6 +35,10 @@ class ToPoint(ecys.Component):
     pass
 
 
+class BannerComponent(ecys.Component):
+    pass
+
+
 @dataclass
 class Die(ecys.Component):
     color: str

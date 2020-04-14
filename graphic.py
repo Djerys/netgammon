@@ -71,7 +71,6 @@ class PointPiecesCoordinates(PointCoordinates):
         y += piece_pos * self.height
         return x, y
 
-
 @dataclass
 class FromPointCoordinates(PointCoordinates):
     home_x: int = 273
@@ -82,9 +81,9 @@ class FromPointCoordinates(PointCoordinates):
 
     def __getitem__(self, point):
         if point == 0:
-            return self.bar_x, self.red_y
-        elif point == 25:
             return self.bar_x, self.white_y
+        elif point == 25:
+            return self.bar_x, self.red_y
         return super().__getitem__(point)
 
 
@@ -107,3 +106,10 @@ DICE_COORDS = DiceCoordinates()
 FROM_COORDS = FromPointCoordinates()
 TO_COORDS = ToPointCoordinates()
 PIECE_COORDS = PointPiecesCoordinates()
+BANNER_COORDS = FromPointCoordinates(
+    home_x=272,
+    outer_x=22,
+    red_y=226,
+    white_y=359,
+    bar_x=234,
+)

@@ -38,34 +38,65 @@ class ArrangePiecesSystem(ecys.System):
         self.game = game
 
     def update(self):
-        self._make_invisible_outsides()
-        self._arrange_insides()
+        self._make_invisible_outside_pieces()
+        self._arrange_inside_pieces()
+        self._arrange_bar_banners()
 
-    def _make_invisible_outsides(self):
+    def _make_invisible_outside_pieces(self):
         points = self.game.board.points
         outside_points = (points[0], points[25])
         for point in outside_points:
             for piece in point.pieces:
-                piece_entity = self._piece_entity(piece)
+                piece_entity = self._entity_with_component(piece, logic.Piece)
                 render = piece_entity.get_component(c.Render)
                 render.visible = False
 
-    def _arrange_insides(self):
-        for point in self.game.board.points[1:25]:
-            piece_number = 0
-            for piece in point.pieces:
-                piece_entity = self._piece_entity(piece)
-                render = piece_entity.get_component(c.Render)
-                coords = graphic.PIECE_COORDS[point.number, piece_number]
-                render.rect.x, render.rect.y = coords
-                render.visible = True
-                piece_number += 1
+    def _arrange_bar_banners(self):
+        bar = [
+            (self.game.board.bar(color.WHITE),
+             self.game.board.bar_pieces(color.WHITE)),
+            (self.game.board.bar(color.RED),
+             self.game.board.bar_pieces(color.RED))
+        ]
+        for point, pieces in bar:
+            banner_entity = self._entity_with_component(
+                point, logic.Point, c.BannerComponent
+            )
+            banner_render = banner_entity.get_component(c.Render)
+            if point.pieces:
+                banner_render.image = config.BANNER_IMAGES[len(point.pieces)]
+                banner_render.visible = True
+            else:
+                banner_render.visible = False
 
-    @lru_cache(maxsize=32)
-    def _piece_entity(self, piece):
-        entities = self.world.entities_with(logic.Piece)
+    def _arrange_inside_pieces(self):
+        for point in self.game.board.points[1:25]:
+            for piece_number, piece in enumerate(point.pieces):
+                piece_entity = self._entity_with_component(piece, logic.Piece)
+                piece_render = piece_entity.get_component(c.Render)
+                coords = graphic.PIECE_COORDS[point.number, piece_number]
+                piece_render.rect.x, piece_render.rect.y = coords
+                if piece_number < config.VISIBLE_NUMBER:
+                    piece_render.visible = True
+                else:
+                    piece_render.visible = False
+            banner_entity = self._entity_with_component(
+                point, logic.Point, c.BannerComponent
+            )
+            banner_render = banner_entity.get_component(c.Render)
+            invisible_pieces = point.pieces[config.VISIBLE_NUMBER:]
+            if invisible_pieces:
+                number = len(invisible_pieces)
+                banner_render.image = config.BANNER_IMAGES[number]
+                banner_render.visible = True
+            else:
+                banner_render.visible = False
+
+    @lru_cache(maxsize=64)
+    def _entity_with_component(self, instance, *components):
+        entities = self.world.entities_with(*components)
         for entity in entities:
-            if piece == entity.get_component(logic.Piece):
+            if instance == entity.get_component(components[0]):
                 return entity
 
 

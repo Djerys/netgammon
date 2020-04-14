@@ -18,6 +18,8 @@ RED_FROM_IMAGE = 'assets/image/red_from_point.png'
 
 TO_IMAGE = 'assets/image/to_point.png'
 
+VISIBLE_NUMBER = 7
+
 DIE_IMAGES = {
     color.WHITE: {
         1: 'assets/image/white_dice_1.png',
@@ -35,4 +37,15 @@ DIE_IMAGES = {
         5: 'assets/image/red_dice_5.png',
         6: 'assets/image/red_dice_6.png'
     }
+}
+
+BANNER_IMAGES = {
+    1: 'assets/image/banner1.png',
+    2: 'assets/image/banner2.png',
+    3: 'assets/image/banner3.png',
+    4: 'assets/image/banner4.png',
+    5: 'assets/image/banner5.png',
+    6: 'assets/image/banner6.png',
+    7: 'assets/image/banner7.png',
+    8: 'assets/image/banner8.png',
 }

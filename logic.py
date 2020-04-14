@@ -179,12 +179,13 @@ class Board:
                 return False
         return True
 
+    @property
     def finished(self):
-        outer_whites = [p for p in self.bear_off(color.WHITE).pieces if
-                        p.color == color.WHITE]
-        outer_reds = [p for p in self.bear_off(color.RED).pieces if
-                      p.color == color.RED]
-        return len(outer_whites) == 15 or len(outer_reds) == 15
+        bear_off_whites = [p for p in self.bear_off(color.WHITE).pieces if
+                           p.color == color.WHITE]
+        bear_off_reds = [p for p in self.bear_off(color.RED).pieces if
+                         p.color == color.RED]
+        return len(bear_off_whites) == 15 or len(bear_off_reds) == 15
 
     def bar(self, piece_color):
         return self.points[0 if piece_color == color.WHITE else 25]

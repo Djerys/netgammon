@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import ecys
 
 import logic
@@ -72,6 +70,7 @@ class Backgammon(Game):
         self._create_points(world)
         self._create_pieces(world)
         self._create_dies(world)
+        self._create_banners(world)
         return world
 
     def _update(self):
@@ -96,6 +95,14 @@ class Backgammon(Game):
             c.Die(color.WHITE, 2)
         )
 
+    def _create_banners(self, world):
+        for point in self.board.points:
+            world.create_entity(
+                c.Render(coords=graphic.BANNER_COORDS[point.number]),
+                c.BannerComponent(),
+                point
+            )
+
     def _create_pieces(self, world):
         for point in self.board.points:
             for piece in point.pieces:
@@ -113,8 +120,18 @@ class Backgammon(Game):
         self._create_to_points(world)
 
     def _create_from_points(self, world):
+        world.create_entity(
+            c.Render(config.WHITE_FROM_IMAGE, graphic.FROM_COORDS[0]),
+            c.FromPointInput(),
+            self.board.points[0]
+        )
+        world.create_entity(
+            c.Render(config.RED_FROM_IMAGE, graphic.FROM_COORDS[25]),
+            c.FromPointInput(),
+            self.board.points[25]
+        )
         image = config.RED_FROM_IMAGE
-        for point in self.board.points:
+        for point in self.board.points[1:25]:
             if point.number >= 13:
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
@@ -134,6 +151,4 @@ class Backgammon(Game):
 
 
 if __name__ == '__main__':
-    game = Backgammon()
-    game.roll_dice(logic.Roll(2, 5))
-    game.run()
+    Backgammon().run()
