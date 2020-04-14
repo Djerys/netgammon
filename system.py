@@ -1,4 +1,5 @@
 import sys
+from functools import lru_cache
 
 import pygame
 import ecys
@@ -37,6 +38,19 @@ class ArrangePiecesSystem(ecys.System):
         self.game = game
 
     def update(self):
+        self._make_invisible_outsides()
+        self._arrange_insides()
+
+    def _make_invisible_outsides(self):
+        points = self.game.board.points
+        outside_points = (points[0], points[25])
+        for point in outside_points:
+            for piece in point.pieces:
+                piece_entity = self._piece_entity(piece)
+                render = piece_entity.get_component(c.Render)
+                render.visible = False
+
+    def _arrange_insides(self):
         for point in self.game.board.points[1:25]:
             piece_number = 0
             for piece in point.pieces:
@@ -47,6 +61,7 @@ class ArrangePiecesSystem(ecys.System):
                 render.visible = True
                 piece_number += 1
 
+    @lru_cache(maxsize=32)
     def _piece_entity(self, piece):
         entities = self.world.entities_with(logic.Piece)
         for entity in entities:
@@ -190,8 +205,3 @@ class HintSystem(ecys.System):
             if number in possible_points:
                 render = entity.get_component(c.Render)
                 render.visible = True
-
-
-class MoveSystem(ecys.System):
-    def update(self):
-        pass
