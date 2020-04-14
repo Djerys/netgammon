@@ -54,10 +54,10 @@ class Point:
         return self.number >= other.number
 
     def __eq__(self, other):
-        return self.number == self.number
+        return self.number == other.number
 
     def __ne__(self, other):
-        return self.number != self.number
+        return self.number != other.number
 
     def __hash__(self):
         return hash(self.number)
