@@ -79,19 +79,19 @@ class Backgammon(Game):
     @staticmethod
     def _create_dies(world):
         world.create_entity(
-            c.Render(coords=graphic.DICE_COORDS[color.RED, 1]),
+            c.Render(coords=graphic.DIE_COORDS[color.RED, 1]),
             c.Die(color.RED, 1)
         )
         world.create_entity(
-            c.Render(coords=graphic.DICE_COORDS[color.RED, 2]),
+            c.Render(coords=graphic.DIE_COORDS[color.RED, 2]),
             c.Die(color.RED, 2)
         )
         world.create_entity(
-            c.Render(coords=graphic.DICE_COORDS[color.WHITE, 1]),
+            c.Render(coords=graphic.DIE_COORDS[color.WHITE, 1]),
             c.Die(color.WHITE, 1)
         )
         world.create_entity(
-            c.Render(coords=graphic.DICE_COORDS[color.WHITE, 2]),
+            c.Render(coords=graphic.DIE_COORDS[color.WHITE, 2]),
             c.Die(color.WHITE, 2)
         )
 

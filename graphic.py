@@ -57,7 +57,7 @@ class PointCoordinates(Coordinates):
 
 
 @dataclass
-class PointPiecesCoordinates(PointCoordinates):
+class PiecesCoordinates(PointCoordinates):
     height: int = 26
     red_y: int = 43
     white_y: int = 530
@@ -70,6 +70,7 @@ class PointPiecesCoordinates(PointCoordinates):
         x, y = super().__getitem__(point)
         y += piece_pos * self.height
         return x, y
+
 
 @dataclass
 class FromPointCoordinates(PointCoordinates):
@@ -102,10 +103,10 @@ class ToPointCoordinates(PointCoordinates):
         return super().__getitem__(point)
 
 
-DICE_COORDS = DiceCoordinates()
+DIE_COORDS = DiceCoordinates()
 FROM_COORDS = FromPointCoordinates()
 TO_COORDS = ToPointCoordinates()
-PIECE_COORDS = PointPiecesCoordinates()
+PIECE_COORDS = PiecesCoordinates()
 BANNER_COORDS = FromPointCoordinates(
     home_x=272,
     outer_x=22,

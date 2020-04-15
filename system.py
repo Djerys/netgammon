@@ -47,7 +47,7 @@ class ArrangePiecesSystem(ecys.System):
         outside_points = (points[0], points[25])
         for point in outside_points:
             for piece in point.pieces:
-                piece_entity = self._entity_with_component(piece, logic.Piece)
+                piece_entity = _entity_with_component(self, piece, logic.Piece)
                 render = piece_entity.get_component(c.Render)
                 render.visible = False
 
@@ -59,12 +59,12 @@ class ArrangePiecesSystem(ecys.System):
              self.game.board.bar_pieces(color.RED))
         ]
         for point, pieces in bar:
-            banner_entity = self._entity_with_component(
-                point, logic.Point, c.BannerComponent
+            banner_entity = _entity_with_component(
+                self, point, logic.Point, c.BannerComponent
             )
             banner_render = banner_entity.get_component(c.Render)
-            if point.pieces:
-                banner_render.image = config.BANNER_IMAGES[len(point.pieces)]
+            if pieces:
+                banner_render.image = config.BANNER_IMAGES[len(pieces)]
                 banner_render.visible = True
             else:
                 banner_render.visible = False
@@ -72,7 +72,7 @@ class ArrangePiecesSystem(ecys.System):
     def _arrange_inside_pieces(self):
         for point in self.game.board.points[1:25]:
             for piece_number, piece in enumerate(point.pieces):
-                piece_entity = self._entity_with_component(piece, logic.Piece)
+                piece_entity = _entity_with_component(self, piece, logic.Piece)
                 piece_render = piece_entity.get_component(c.Render)
                 coords = graphic.PIECE_COORDS[point.number, piece_number]
                 piece_render.rect.x, piece_render.rect.y = coords
@@ -80,8 +80,8 @@ class ArrangePiecesSystem(ecys.System):
                     piece_render.visible = True
                 else:
                     piece_render.visible = False
-            banner_entity = self._entity_with_component(
-                point, logic.Point, c.BannerComponent
+            banner_entity = _entity_with_component(
+                self, point, logic.Point, c.BannerComponent
             )
             banner_render = banner_entity.get_component(c.Render)
             invisible_pieces = point.pieces[config.VISIBLE_NUMBER:]
@@ -91,13 +91,6 @@ class ArrangePiecesSystem(ecys.System):
                 banner_render.visible = True
             else:
                 banner_render.visible = False
-
-    @lru_cache(maxsize=64)
-    def _entity_with_component(self, instance, *components):
-        entities = self.world.entities_with(*components)
-        for entity in entities:
-            if instance == entity.get_component(components[0]):
-                return entity
 
 
 @ecys.requires(c.Render)
@@ -200,6 +193,8 @@ class RollSystem(ecys.System):
                 not self.game.roll.dies or
                 not self.game.possible_points):
             self.game.roll_dice()
+        possible_points = self.game.possible_points
+        a = 1
 
 
 class HintSystem(ecys.System):
@@ -208,7 +203,7 @@ class HintSystem(ecys.System):
         self.game = game
 
     def update(self):
-        point_entity = self._from_point()
+        point_entity = self._clicked_from_point()
         if not point_entity:
             return
         point = point_entity.get_component(logic.Point)
@@ -220,14 +215,14 @@ class HintSystem(ecys.System):
         except AssertionError:
             pass
 
-    def _from_point(self):
-        point = None
+    def _clicked_from_point(self):
+        point_entity = None
         entities = self.world.entities_with(c.FromPointInput)
         for entity in entities:
             input = entity.get_component(c.FromPointInput)
             if input.clicked:
-                point = entity
-        return point
+                point_entity = entity
+        return point_entity
 
     def _make_visible_possibles(self, possible_points):
         entities = self.world.entities_with(c.ToPoint, c.Render, logic.Point)
@@ -236,3 +231,11 @@ class HintSystem(ecys.System):
             if number in possible_points:
                 render = entity.get_component(c.Render)
                 render.visible = True
+
+
+@lru_cache(maxsize=128)
+def _entity_with_component(system, instance, *components):
+    entities = system.world.entities_with(*components)
+    for entity in entities:
+        if instance == entity.get_component(components[0]):
+            return entity
