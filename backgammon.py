@@ -34,9 +34,8 @@ class Backgammon(Game):
 
     @property
     def possible_points(self):
-        bar = self.board.bar(self.color)
         if self.board.bar_pieces(self.color):
-            return [bar]
+            return [self.board.bar(self.color)]
         possible_points_ = []
         for point in self.board.points[1:25]:
             if (point.pieces and point.color == self.color
