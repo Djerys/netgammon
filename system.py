@@ -60,7 +60,7 @@ class ArrangePiecesSystem(ecys.System):
         ]
         for point, pieces in bar:
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.BannerComponent
+                self, point, logic.Point, c.Banner
             )
             banner_render = banner_entity.get_component(c.Render)
             if pieces:
@@ -81,7 +81,7 @@ class ArrangePiecesSystem(ecys.System):
                 else:
                     piece_render.visible = False
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.BannerComponent
+                self, point, logic.Point, c.Banner
             )
             banner_render = banner_entity.get_component(c.Render)
             invisible_pieces = point.pieces[config.VISIBLE_NUMBER:]
@@ -189,12 +189,20 @@ class RollSystem(ecys.System):
         self.game = game
 
     def update(self):
+        win_banner_entity = self.world.entities_with(
+            c.WinBanner, c.Render
+        )[0]
+        render = win_banner_entity.get_component(c.Render)
+        if self.game.board.finished:
+            render.image = config.WIN_BANNER_IMAGES[self.game.color]
+            render.visible = True
+        else:
+            render.visible = False
+
         if (not self.game.history or
                 not self.game.roll.dies or
                 not self.game.possible_points):
             self.game.roll_dice()
-        possible_points = self.game.possible_points
-        a = 1
 
 
 class HintSystem(ecys.System):
@@ -208,10 +216,10 @@ class HintSystem(ecys.System):
             return
         point = point_entity.get_component(logic.Point)
         try:
-            possible_points = self.game.board.possible_moves(
+            possible_to_move = self.game.board.possible_moves(
                 self.game.roll, point.number
             )
-            self._make_visible_possibles(possible_points)
+            self._make_visible_possibles(possible_to_move)
         except AssertionError:
             pass
 

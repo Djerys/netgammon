@@ -35,7 +35,11 @@ class ToPoint(ecys.Component):
     pass
 
 
-class BannerComponent(ecys.Component):
+class Banner(ecys.Component):
+    pass
+
+
+class WinBanner(ecys.Component):
     pass
 
 

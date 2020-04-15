@@ -114,3 +114,4 @@ BANNER_COORDS = FromPointCoordinates(
     white_y=359,
     bar_x=234,
 )
+WIN_BANNER_COORDS = (190, 270)

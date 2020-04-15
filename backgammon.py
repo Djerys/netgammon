@@ -35,11 +35,10 @@ class Backgammon(Game):
     @property
     def possible_points(self):
         bar = self.board.bar(self.color)
-        if bar.pieces:
+        if self.board.bar_pieces(self.color):
             return [bar]
-        points = [p for p in self.board.points]
         possible_points_ = []
-        for point in points:
+        for point in self.board.points[1:25]:
             if (point.pieces and point.color == self.color
                     and self.board.possible_moves(self.roll, point)):
                 possible_points_.append(point)
@@ -71,6 +70,7 @@ class Backgammon(Game):
         self._create_pieces(world)
         self._create_dies(world)
         self._create_banners(world)
+        self._create_win_banner(world)
         return world
 
     def _update(self):
@@ -99,7 +99,7 @@ class Backgammon(Game):
         for point in self.board.points:
             world.create_entity(
                 c.Render(coords=graphic.BANNER_COORDS[point.number]),
-                c.BannerComponent(),
+                c.Banner(),
                 point
             )
 
@@ -148,6 +148,12 @@ class Backgammon(Game):
                 c.ToPoint(),
                 point
             )
+
+    def _create_win_banner(self, world):
+        world.create_entity(
+            c.Render(coords=graphic.WIN_BANNER_COORDS),
+            c.WinBanner()
+        )
 
 
 if __name__ == '__main__':

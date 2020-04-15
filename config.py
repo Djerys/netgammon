@@ -49,3 +49,8 @@ BANNER_IMAGES = {
     7: 'assets/image/banner7.png',
     8: 'assets/image/banner8.png',
 }
+
+WIN_BANNER_IMAGES = {
+    color.RED: 'assets/image/red_wins.png',
+    color.WHITE: 'assets/image/white_wins.png'
+}
