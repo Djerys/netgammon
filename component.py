@@ -14,13 +14,19 @@ class Render(ecys.Component):
             self.rect = pygame.Rect(coords, (1, 1))
         self.visible = visible
 
+    def convert_image(self):
+        self._image = self._image.convert()
+
     @property
     def image(self):
         return self._image
 
     @image.setter
-    def image(self, image_filename):
-        self._image = pygame.image.load(image_filename)
+    def image(self, image):
+        if isinstance(image, str):
+            self._image = pygame.image.load(image)
+        else:
+            self._image = image
         x, y = self.rect.x, self.rect.y
         self.rect = self._image.get_rect()
         self.rect.x, self.rect.y = x, y

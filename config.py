@@ -59,5 +59,5 @@ MENU_BUTTON_IMAGES = {
         color.RED: 'assets/image/red_wins.png',
         color.WHITE: 'assets/image/white_wins.png'
     },
-    graphic.NET: ''
+    graphic.NET: 'assets/image/net_pvp.png'
 }

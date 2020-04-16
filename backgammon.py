@@ -30,9 +30,11 @@ class Backgammon:
     @property
     def possible_points(self):
         bar = self.board.bar(self.color)
-        if (self.board.bar_pieces(self.color) and
-                self.board.possible_moves(self.roll, bar)):
-            return [bar]
+        if self.board.bar_pieces(self.color):
+            if self.board.possible_moves(self.roll, bar):
+                return [bar]
+            else:
+                return []
         possible_points_ = []
         for point in self.board.points[1:25]:
             if (point.pieces and point.color == self.color

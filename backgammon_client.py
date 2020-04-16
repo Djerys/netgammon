@@ -18,6 +18,7 @@ class BackgammonClient:
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
         self.local_pvp_button = None
+        self.net_pvp_button = None
         self.win_button = None
         self.game = game
         self.world = self._create_world()
@@ -31,11 +32,12 @@ class BackgammonClient:
         with open(filename, 'w') as history_file:
             for number, turn in enumerate(self.game.history):
                 color = 'White' if number % 2 == 0 else 'Red'
-                history_file.write(f'{number}. {color} {turn}\n')
+                history_file.write(f'{number + 1}. {color} {turn}\n')
 
     def _create_world(self):
         world = ecys.World()
-        world.add_system(s.TurnSystem(self), priority=5)
+        world.add_system(s.StateTrackingSystem(self), priority=6)
+        world.add_system(s.AutoRollSystem(self), priority=5)
         world.add_system(s.ArrangeDiesSystem(self), priority=4)
         world.add_system(s.ArrangePiecesSystem(self), priority=3)
         world.add_system(s.InputSystem(self), priority=2)
@@ -126,6 +128,12 @@ class BackgammonClient:
             c.Render(
                 config.MENU_BUTTON_IMAGES[g.LOCAL],
                 g.MENU_BUTTON_COORDS[g.LOCAL]
+            )
+        )
+        self.net_pvp_button = world.create_entity(
+            c.Render(
+                config.MENU_BUTTON_IMAGES[g.NET],
+                g.MENU_BUTTON_COORDS[g.NET]
             )
         )
         self.win_button = world.create_entity(

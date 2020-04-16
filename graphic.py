@@ -122,5 +122,5 @@ BANNER_COORDS = FromPointCoordinates(
 MENU_BUTTON_COORDS = {
     LOCAL: (190, 205),
     WIN: (190, 270),
-    NET: (0, 0)
+    NET: (190, 335)
 }

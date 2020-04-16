@@ -18,17 +18,41 @@ class ArrangeDiesSystem(ecys.System):
         self.game = client.game
 
     def update(self):
+        unused_dies = list(self.game.roll.dies)
         for entity in self.entities:
             render = entity.get_component(c.Render)
-            die = entity.get_component(c.Die)
-            if self.game.color == die.color:
+            die_entity = entity.get_component(c.Die)
+            if self.game.color == die_entity.color:
                 render.visible = True
-                if die.number == 1:
-                    render.image = config.DIE_IMAGES[die.color][self.game.roll.die1]
-                elif die.number == 2:
-                    render.image = config.DIE_IMAGES[die.color][self.game.roll.die2]
+                if die_entity.number == 1:
+                    die1 = self.game.roll.die1
+                    render.image = config.DIE_IMAGES[die_entity.color][die1]
+                    self._make_useless_dies_transparent(
+                        die1, render, unused_dies
+                    )
+                elif die_entity.number == 2:
+                    die2 = self.game.roll.die2
+                    render.image = config.DIE_IMAGES[die_entity.color][die2]
+                    self._make_useless_dies_transparent(
+                        die2, render, unused_dies
+                    )
             else:
                 render.visible = False
+
+    def _make_useless_dies_transparent(
+            self,
+            die,
+            render,
+            unused_dies,
+            alpha=100
+    ):
+        unused_die = die in unused_dies
+        if not unused_die or not self.game.possible_points:
+            render.convert_image()
+            render.image.set_alpha(alpha)
+        elif unused_die:
+            unused_dies.remove(die)
+
 
 
 @ecys.requires(c.Render, logic.Piece)
@@ -120,6 +144,7 @@ class InputSystem(ecys.System):
             self._handle_close_window(event)
             self._handle_from_point_press(event)
             self._handle_to_point_press(event)
+            self._handle_finish_move(event)
             self._handle_local_pvp_button_press(event)
             self._handle_save_history(event)
 
@@ -132,6 +157,16 @@ class InputSystem(ecys.System):
         return (event.type == pygame.MOUSEBUTTONUP and
                 event.button == pygame.BUTTON_LEFT and
                 self.client.game.game_over)
+
+    def _was_no_game_active_s_key_pressed(self, event):
+        return (event.type == pygame.KEYUP and
+                event.key == pygame.K_s and
+                self.client.game.game_over)
+
+    def _was_game_active_enter_pressed(self, event):
+        return (event.type == pygame.KEYUP and
+                event.key == pygame.K_RETURN and
+                not self.client.game.game_over)
 
     @staticmethod
     def _handle_close_window(event):
@@ -193,23 +228,27 @@ class InputSystem(ecys.System):
             render = entity.get_component(c.Render)
             render.visible = False
 
+    def _handle_finish_move(self, event):
+        can_finish = (not self.client.game.roll.dies or
+                      not self.client.game.possible_points)
+        if self._was_game_active_enter_pressed(event) and can_finish:
+            self.client.game.roll_dice()
+
     def _handle_local_pvp_button_press(self, event):
         if self._was_no_game_active_click(event):
             local_render = self.client.local_pvp_button.get_component(c.Render)
-            win_render = self.client.win_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
                 self.client.game.restart()
-                local_render.visible = False
-                win_render.visible = False
 
     def _handle_save_history(self, event):
-        if (event.type == pygame.KEYUP and
-                event.key == pygame.K_s and
-                self.client.game_over):
+        win_render = self.client.win_button.get_component(c.Render)
+        win_button_pressed = (self._was_no_game_active_click(event)
+                              and win_render.rect.collidepoint(event.pos))
+        if win_button_pressed or self._was_no_game_active_s_key_pressed(event):
             self.client.save_history(config.HISTORY_FILEPATH)
 
 
-class TurnSystem(ecys.System):
+class StateTrackingSystem(ecys.System):
     def __init__(self, client):
         super().__init__()
         self.client = client
@@ -217,15 +256,25 @@ class TurnSystem(ecys.System):
     def update(self):
         win_render = self.client.win_button.get_component(c.Render)
         local_render = self.client.local_pvp_button.get_component(c.Render)
+        net_render = self.client.net_pvp_button.get_component(c.Render)
         if self.client.game.game_over:
             win_render.image = config.MENU_BUTTON_IMAGES[g.WIN][self.client.game.color]
             win_render.visible = True
             local_render.visible = True
+            net_render.visible = True
             return
+        win_render.visible = False
+        local_render.visible = False
+        net_render.visible = False
 
-        if (not self.client.game.history or
-                not self.client.game.roll.dies or
-                not self.client.game.possible_points):
+
+class AutoRollSystem(ecys.System):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+
+    def update(self):
+        if not self.client.game.history:
             self.client.game.roll_dice()
 
 
