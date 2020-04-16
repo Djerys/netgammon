@@ -17,8 +17,20 @@ class Backgammon(Game):
         )
         self.board = logic.Board()
         self.history = []
+        self.win_button = None
         self.world = self._create_world()
-        self.is_running = True
+        self.game_over = False
+
+    def save_history(self, filename):
+        with open(filename, 'w') as history_file:
+            for number, turn in enumerate(self.history):
+                color = 'White' if number % 2 == 0 else 'Red'
+                history_file.write(f'{color} {turn}\n')
+
+    def restart(self):
+        self.board.on_start()
+        self.history = []
+        self.game_over = False
 
     @property
     def roll(self):
@@ -59,7 +71,7 @@ class Backgammon(Game):
     def _create_world(self):
         world = ecys.World()
         render_system = s.RenderSystem(self.surface, config.BACKGROUND_IMAGE)
-        world.add_system(s.RollSystem(self), priority=5)
+        world.add_system(s.TurnSystem(self), priority=5)
         world.add_system(s.ArrangeDiesSystem(self), priority=4)
         world.add_system(s.ArrangePiecesSystem(self), priority=3)
         world.add_system(s.InputSystem(self), priority=2)
@@ -69,7 +81,7 @@ class Backgammon(Game):
         self._create_pieces(world)
         self._create_dies(world)
         self._create_banners(world)
-        self._create_win_banner(world)
+        self._create_menu_buttons(world)
         return world
 
     def _update(self):
@@ -148,10 +160,15 @@ class Backgammon(Game):
                 point
             )
 
-    def _create_win_banner(self, world):
-        world.create_entity(
-            c.Render(coords=graphic.WIN_BANNER_COORDS),
-            c.WinBanner()
+    def _create_menu_buttons(self, world):
+        self.local_pvp_button = world.create_entity(
+            c.Render(
+                config.MENU_BUTTON_IMAGES[graphic.LOCAL],
+                graphic.MENU_BUTTON_COORDS[graphic.LOCAL]
+            )
+        )
+        self.win_button = world.create_entity(
+            c.Render(coords=graphic.MENU_BUTTON_COORDS[graphic.WIN])
         )
 
 

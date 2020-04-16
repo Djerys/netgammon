@@ -1,4 +1,5 @@
 import sys
+import time
 from functools import lru_cache
 
 import pygame
@@ -117,65 +118,75 @@ class InputSystem(ecys.System):
 
     def update(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self._handle_close_window()
+            self._handle_close_window(event)
+            self._handle_from_point_press(event)
+            self._handle_to_point_press(event)
+            self._handle_local_pvp_button_press(event)
+            self._handle_save_history(event)
 
-            if (event.type == pygame.MOUSEBUTTONUP and
-                    event.button == pygame.BUTTON_LEFT and
-                    self.game.is_running):
-                self._handle_from_point_press(event.pos)
-                self._handle_to_point_press(event.pos)
+    def _was_game_active_click(self, event):
+        return (event.type == pygame.MOUSEBUTTONUP and
+                event.button == pygame.BUTTON_LEFT and
+                not self.game.game_over)
+
+    def _was_no_game_active_click(self, event):
+        return (event.type == pygame.MOUSEBUTTONUP and
+                event.button == pygame.BUTTON_LEFT and
+                self.game.game_over)
 
     @staticmethod
-    def _handle_close_window():
-        pygame.quit()
-        sys.exit()
+    def _handle_close_window(event):
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
 
-    def _handle_from_point_press(self, position):
-        from_entities = self.world.entities_with(
-            c.FromPointInput, c.Render, logic.Point
-        )
-        other = []
-        clicked = False
-        for entity in from_entities:
-            input = entity.get_component(c.FromPointInput)
-            render = entity.get_component(c.Render)
-            point = entity.get_component(logic.Point)
-            if (render.rect.collidepoint(position) and
-                    point in self.game.possible_points):
-                render.visible = True
-                self._make_to_points_invisible()
-                input.clicked = True
-                self.clicked_from = (input, render, point)
-                clicked = True
-            else:
-                other.append((input, render))
-
-        if clicked:
-            for input, render in other:
-                input.clicked = False
-                render.visible = False
-
-    def _handle_to_point_press(self, position):
-        entities = self.world.entities_with(c.ToPoint, c.Render, logic.Point)
-        clicked = False
-        renders = []
-        for entity in entities:
-            render = entity.get_component(c.Render)
-            renders.append(render)
-            if (render.rect.collidepoint(position) and
-                    render.visible and
-                    self.clicked_from):
+    def _handle_from_point_press(self, event):
+        if self._was_game_active_click(event):
+            from_entities = self.world.entities_with(
+                c.FromPointInput, c.Render, logic.Point
+            )
+            other = []
+            clicked = False
+            for entity in from_entities:
+                input = entity.get_component(c.FromPointInput)
+                render = entity.get_component(c.Render)
                 point = entity.get_component(logic.Point)
-                self.game.move(self.clicked_from[2], point)
-                self.clicked_from[0].clicked = False
-                self.clicked_from[1].visible = False
-                self.clicked_from = None
-                clicked = True
+                if (render.rect.collidepoint(event.pos) and
+                        point in self.game.possible_points):
+                    render.visible = True
+                    self._make_to_points_invisible()
+                    input.clicked = True
+                    self.clicked_from = (input, render, point)
+                    clicked = True
+                else:
+                    other.append((input, render))
 
-        if clicked:
-            for render in renders:
-                render.visible = False
+            if clicked:
+                for input, render in other:
+                    input.clicked = False
+                    render.visible = False
+
+    def _handle_to_point_press(self, event):
+        if self._was_game_active_click(event):
+            entities = self.world.entities_with(c.ToPoint, c.Render, logic.Point)
+            clicked = False
+            renders = []
+            for entity in entities:
+                render = entity.get_component(c.Render)
+                renders.append(render)
+                if (render.rect.collidepoint(event.pos) and
+                        render.visible and
+                        self.clicked_from):
+                    point = entity.get_component(logic.Point)
+                    self.game.move(self.clicked_from[2], point)
+                    self.clicked_from[0].clicked = False
+                    self.clicked_from[1].visible = False
+                    self.clicked_from = None
+                    clicked = True
+
+            if clicked:
+                for render in renders:
+                    render.visible = False
 
     def _make_to_points_invisible(self):
         to_entities = self.world.entities_with(c.ToPoint, c.Render)
@@ -183,23 +194,36 @@ class InputSystem(ecys.System):
             render = entity.get_component(c.Render)
             render.visible = False
 
+    def _handle_local_pvp_button_press(self, event):
+        if self._was_no_game_active_click(event):
+            local_render = self.game.local_pvp_button.get_component(c.Render)
+            win_render = self.game.win_button.get_component(c.Render)
+            if local_render.rect.collidepoint(event.pos):
+                self.game.restart()
+                local_render.visible = False
+                win_render.visible = False
 
-class RollSystem(ecys.System):
+    def _handle_save_history(self, event):
+        if (event.type == pygame.KEYUP and
+                event.key == pygame.K_s and
+                self.game.game_over):
+            self.game.save_history('history.txt')
+
+
+class TurnSystem(ecys.System):
     def __init__(self, game):
         super().__init__()
         self.game = game
 
     def update(self):
-        win_banner_entity = self.world.entities_with(
-            c.WinBanner, c.Render
-        )[0]
-        render = win_banner_entity.get_component(c.Render)
+        win_render = self.game.win_button.get_component(c.Render)
+        local_render = self.game.local_pvp_button.get_component(c.Render)
         if self.game.board.finished:
-            render.image = config.WIN_BANNER_IMAGES[self.game.color]
-            render.visible = True
-            self.game.is_running = False
+            self.game.game_over = True
+            win_render.image = config.MENU_BUTTON_IMAGES[graphic.WIN][self.game.color]
+            win_render.visible = True
+            local_render.visible = True
             return
-        render.visible = False
 
         if (not self.game.history or
                 not self.game.roll.dies or

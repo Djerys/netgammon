@@ -1,4 +1,5 @@
 import color
+import graphic
 
 
 SCREEN_WIDTH = 500
@@ -50,7 +51,12 @@ BANNER_IMAGES = {
     8: 'assets/image/banner8.png',
 }
 
-WIN_BANNER_IMAGES = {
-    color.RED: 'assets/image/red_wins.png',
-    color.WHITE: 'assets/image/white_wins.png'
+MENU_BUTTON_IMAGES = {
+    graphic.LOCAL: 'assets/image/local_pvp.png',
+    graphic.WIN: {
+        color.RED: 'assets/image/red_wins.png',
+        color.WHITE: 'assets/image/white_wins.png'
+    },
+    graphic.NET: ''
 }
+

@@ -4,6 +4,11 @@ from dataclasses import dataclass
 import color
 
 
+LOCAL = 0
+WIN = 1
+NET = 2
+
+
 class Coordinates(ABC):
     @abstractmethod
     def __getitem__(self, item):
@@ -114,4 +119,8 @@ BANNER_COORDS = FromPointCoordinates(
     white_y=359,
     bar_x=234,
 )
-WIN_BANNER_COORDS = (190, 270)
+MENU_BUTTON_COORDS = {
+    LOCAL: (190, 205),
+    WIN: (190, 270),
+    NET: (0, 0)
+}

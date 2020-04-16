@@ -97,14 +97,14 @@ class Point:
                 raise ValueError('More than on color in one point')
         return color_
 
+    def clear(self):
+        self._pieces = []
+
 
 class Board:
     def __init__(self):
         self._points = tuple(Point(i) for i in range(26))
-        white_start_state = ((1, 2), (12, 5), (17, 3), (19, 5))
-        red_start_state = ((24, 2), (13, 5), (8, 3), (6, 5))
-        self._on_start(color.WHITE, white_start_state)
-        self._on_start(color.RED, red_start_state)
+        self.on_start()
 
     def __repr__(self):
         return f'Board{self.points}'
@@ -112,6 +112,13 @@ class Board:
     @property
     def points(self):
         return self._points
+
+    def on_start(self):
+        white_start_state = ((1, 2), (12, 5), (17, 3), (19, 5))
+        red_start_state = ((24, 2), (13, 5), (8, 3), (6, 5))
+        self._clear_points()
+        self._on_start(color.WHITE, white_start_state)
+        self._on_start(color.RED, red_start_state)
 
     def move(self, from_point, to_point):
         if not isinstance(from_point, int):
@@ -238,6 +245,10 @@ class Board:
                 self.points[point].push(Piece(piece_color, number))
                 number += 1
 
+    def _clear_points(self):
+        for point in self.points:
+            point.clear()
+
 
 class Roll:
     def __init__(self, die1=None, die2=None):
@@ -285,6 +296,12 @@ class Turn:
 
     def __repr__(self):
         return f'{self.roll}: {self.moves}'
+
+    def __str__(self):
+        moves = []
+        for from_point, to_point in self.moves:
+            moves.append(f'{from_point} -> {to_point}')
+        return f'{self.roll}: {", ".join(moves)}'
 
     def __eq__(self, other):
         return self.roll == other.roll and self.moves == other.moves

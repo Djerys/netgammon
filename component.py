@@ -39,10 +39,6 @@ class Banner(ecys.Component):
     pass
 
 
-class WinBanner(ecys.Component):
-    pass
-
-
 @dataclass
 class Die(ecys.Component):
     color: str
