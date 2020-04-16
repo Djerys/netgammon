@@ -121,7 +121,8 @@ class InputSystem(ecys.System):
                 self._handle_close_window()
 
             if (event.type == pygame.MOUSEBUTTONUP and
-                    event.button == pygame.BUTTON_LEFT):
+                    event.button == pygame.BUTTON_LEFT and
+                    self.game.is_running):
                 self._handle_from_point_press(event.pos)
                 self._handle_to_point_press(event.pos)
 
@@ -196,8 +197,9 @@ class RollSystem(ecys.System):
         if self.game.board.finished:
             render.image = config.WIN_BANNER_IMAGES[self.game.color]
             render.visible = True
-        else:
-            render.visible = False
+            self.game.is_running = False
+            return
+        render.visible = False
 
         if (not self.game.history or
                 not self.game.roll.dies or

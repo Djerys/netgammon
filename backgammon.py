@@ -18,7 +18,7 @@ class Backgammon(Game):
         self.board = logic.Board()
         self.history = []
         self.world = self._create_world()
-        self.players = {}
+        self.is_running = True
 
     @property
     def roll(self):
