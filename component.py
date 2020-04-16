@@ -35,7 +35,7 @@ class ToPoint(ecys.Component):
     pass
 
 
-class Banner(ecys.Component):
+class AdditionalBanner(ecys.Component):
     pass
 
 

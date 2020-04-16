@@ -300,6 +300,10 @@ class Turn:
     def __str__(self):
         moves = []
         for from_point, to_point in self.moves:
+            if from_point == 0 or from_point == 25:
+                from_point = 'bar'
+            if to_point == 0 or to_point == 25:
+                to_point = 'bear off'
             moves.append(f'{from_point} -> {to_point}')
         return f'{self.roll}: {", ".join(moves)}'
 

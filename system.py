@@ -1,5 +1,4 @@
 import sys
-import time
 from functools import lru_cache
 
 import pygame
@@ -7,16 +6,16 @@ import ecys
 
 import config
 import logic
-import graphic
 import color
+import graphic as g
 import component as c
 
 
 @ecys.requires(c.Render, c.Die)
 class ArrangeDiesSystem(ecys.System):
-    def __init__(self, game):
+    def __init__(self, client):
         super().__init__()
-        self.game = game
+        self.game = client.game
 
     def update(self):
         for entity in self.entities:
@@ -34,9 +33,9 @@ class ArrangeDiesSystem(ecys.System):
 
 @ecys.requires(c.Render, logic.Piece)
 class ArrangePiecesSystem(ecys.System):
-    def __init__(self, game):
+    def __init__(self, client):
         super().__init__()
-        self.game = game
+        self.game = client.game
 
     def update(self):
         self._make_invisible_outside_pieces()
@@ -61,7 +60,7 @@ class ArrangePiecesSystem(ecys.System):
         ]
         for point, pieces in bar:
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.Banner
+                self, point, logic.Point, c.AdditionalBanner
             )
             banner_render = banner_entity.get_component(c.Render)
             if pieces:
@@ -75,14 +74,14 @@ class ArrangePiecesSystem(ecys.System):
             for piece_number, piece in enumerate(point.pieces):
                 piece_entity = _entity_with_component(self, piece, logic.Piece)
                 piece_render = piece_entity.get_component(c.Render)
-                coords = graphic.PIECE_COORDS[point.number, piece_number]
+                coords = g.PIECE_COORDS[point.number, piece_number]
                 piece_render.rect.x, piece_render.rect.y = coords
                 if piece_number < config.VISIBLE_NUMBER:
                     piece_render.visible = True
                 else:
                     piece_render.visible = False
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.Banner
+                self, point, logic.Point, c.AdditionalBanner
             )
             banner_render = banner_entity.get_component(c.Render)
             invisible_pieces = point.pieces[config.VISIBLE_NUMBER:]
@@ -96,10 +95,10 @@ class ArrangePiecesSystem(ecys.System):
 
 @ecys.requires(c.Render)
 class RenderSystem(ecys.System):
-    def __init__(self, surface, background_filename):
+    def __init__(self, client):
         super().__init__()
-        self.surface = surface
-        self.background_image = pygame.image.load(background_filename)
+        self.surface = client.surface
+        self.background_image = pygame.image.load(client.background_image)
 
     def update(self):
         self.surface.blit(self.background_image, (0, 0))
@@ -111,9 +110,9 @@ class RenderSystem(ecys.System):
 
 
 class InputSystem(ecys.System):
-    def __init__(self, game):
+    def __init__(self, client):
         super().__init__()
-        self.game = game
+        self.client = client
         self.clicked_from = None
 
     def update(self):
@@ -127,12 +126,12 @@ class InputSystem(ecys.System):
     def _was_game_active_click(self, event):
         return (event.type == pygame.MOUSEBUTTONUP and
                 event.button == pygame.BUTTON_LEFT and
-                not self.game.game_over)
+                not self.client.game.game_over)
 
     def _was_no_game_active_click(self, event):
         return (event.type == pygame.MOUSEBUTTONUP and
                 event.button == pygame.BUTTON_LEFT and
-                self.game.game_over)
+                self.client.game.game_over)
 
     @staticmethod
     def _handle_close_window(event):
@@ -152,7 +151,7 @@ class InputSystem(ecys.System):
                 render = entity.get_component(c.Render)
                 point = entity.get_component(logic.Point)
                 if (render.rect.collidepoint(event.pos) and
-                        point in self.game.possible_points):
+                        point in self.client.game.possible_points):
                     render.visible = True
                     self._make_to_points_invisible()
                     input.clicked = True
@@ -178,7 +177,7 @@ class InputSystem(ecys.System):
                         render.visible and
                         self.clicked_from):
                     point = entity.get_component(logic.Point)
-                    self.game.move(self.clicked_from[2], point)
+                    self.client.game.move(self.clicked_from[2], point)
                     self.clicked_from[0].clicked = False
                     self.clicked_from[1].visible = False
                     self.clicked_from = None
@@ -196,45 +195,44 @@ class InputSystem(ecys.System):
 
     def _handle_local_pvp_button_press(self, event):
         if self._was_no_game_active_click(event):
-            local_render = self.game.local_pvp_button.get_component(c.Render)
-            win_render = self.game.win_button.get_component(c.Render)
+            local_render = self.client.local_pvp_button.get_component(c.Render)
+            win_render = self.client.win_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
-                self.game.restart()
+                self.client.game.restart()
                 local_render.visible = False
                 win_render.visible = False
 
     def _handle_save_history(self, event):
         if (event.type == pygame.KEYUP and
                 event.key == pygame.K_s and
-                self.game.game_over):
-            self.game.save_history('history.txt')
+                self.client.game_over):
+            self.client.save_history(config.HISTORY_FILEPATH)
 
 
 class TurnSystem(ecys.System):
-    def __init__(self, game):
+    def __init__(self, client):
         super().__init__()
-        self.game = game
+        self.client = client
 
     def update(self):
-        win_render = self.game.win_button.get_component(c.Render)
-        local_render = self.game.local_pvp_button.get_component(c.Render)
-        if self.game.board.finished:
-            self.game.game_over = True
-            win_render.image = config.MENU_BUTTON_IMAGES[graphic.WIN][self.game.color]
+        win_render = self.client.win_button.get_component(c.Render)
+        local_render = self.client.local_pvp_button.get_component(c.Render)
+        if self.client.game.game_over:
+            win_render.image = config.MENU_BUTTON_IMAGES[g.WIN][self.client.game.color]
             win_render.visible = True
             local_render.visible = True
             return
 
-        if (not self.game.history or
-                not self.game.roll.dies or
-                not self.game.possible_points):
-            self.game.roll_dice()
+        if (not self.client.game.history or
+                not self.client.game.roll.dies or
+                not self.client.game.possible_points):
+            self.client.game.roll_dice()
 
 
 class HintSystem(ecys.System):
-    def __init__(self, game):
+    def __init__(self, client):
         super().__init__()
-        self.game = game
+        self.game = client.game
 
     def update(self):
         point_entity = self._clicked_from_point()

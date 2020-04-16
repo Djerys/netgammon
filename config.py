@@ -19,6 +19,8 @@ RED_FROM_IMAGE = 'assets/image/red_from_point.png'
 
 TO_IMAGE = 'assets/image/to_point.png'
 
+HISTORY_FILEPATH = 'backgammon_history.txt'
+
 VISIBLE_NUMBER = 7
 
 DIE_IMAGES = {
@@ -59,4 +61,3 @@ MENU_BUTTON_IMAGES = {
     },
     graphic.NET: ''
 }
-
