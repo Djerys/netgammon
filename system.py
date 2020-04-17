@@ -245,7 +245,7 @@ class InputSystem(ecys.System):
         win_button_pressed = (self._was_no_game_active_click(event)
                               and win_render.rect.collidepoint(event.pos))
         if win_button_pressed or self._was_no_game_active_s_key_pressed(event):
-            self.client.save_history(config.HISTORY_FILEPATH)
+            self.client.save_history(config.HISTORY_FILENAME)
 
 
 class StateTrackingSystem(ecys.System):

@@ -13,7 +13,7 @@ class Piece:
         self._number = number
 
     def __repr__(self):
-        return f'{self.color} No {self.number}'
+        return f'{self.number}: {self.color}'
 
     def __eq__(self, other):
         return self.color == other.color and self.number == other.number
@@ -146,8 +146,7 @@ class Board:
             assert 0 <= point <= 25, f'Valid points are [0..25]: {point}'
             point = self.points[point]
         assert point.pieces, f'There are no pieces on this point: {point}'
-        piece = point.pieces[-1]
-        direction = 1 if piece.color == color.WHITE else -1
+        direction = 1 if point.color == color.WHITE else -1
         dies = roll.dies
         if not dies:
             return []
@@ -157,12 +156,12 @@ class Board:
             paths = [(dies[0],) * len(dies)]
         else:
             paths = [(dies[0], dies[1]), (dies[1], dies[0])]
-        many_in_bar = len(self.bar_pieces(piece.color)) > 1
+        many_in_bar = len(self.bar_pieces(point.color)) > 1
         moves = []
         min_point = 1
         max_point = 24
-        if self.can_bear_off(piece.color):
-            if piece.color == color.RED:
+        if self.can_bear_off(point.color):
+            if point.color == color.RED:
                 min_point -= 1
             else:
                 max_point += 1
@@ -173,7 +172,7 @@ class Board:
             for die in path:
                 number += direction * die
                 if (number < min_point or number > max_point or
-                        self.points[number].blocked(piece.color)):
+                        self.points[number].blocked(point.color)):
                     break
                 if number not in moves:
                     moves.append(number)

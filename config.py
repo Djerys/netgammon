@@ -5,7 +5,7 @@ import graphic
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 600
 
-FRAME_RATE = 60
+FRAME_RATE = 30
 
 CAPTION = 'Backgammon'
 
@@ -19,7 +19,7 @@ RED_FROM_IMAGE = 'assets/image/red_from_point.png'
 
 TO_IMAGE = 'assets/image/to_point.png'
 
-HISTORY_FILEPATH = 'backgammon_history.txt'
+HISTORY_FILENAME = 'backgammon_history.txt'
 
 VISIBLE_NUMBER = 7
 
