@@ -4,11 +4,7 @@ from functools import lru_cache
 import pygame
 import ecys
 
-import config
-import logic
-import color
-import graphic as g
-import component as c
+from backgammon_game import color, component as c, config, graphic as g, logic
 
 
 @ecys.requires(c.Render, c.Die)
@@ -18,6 +14,8 @@ class ArrangeDiesSystem(ecys.System):
         self.game = client.game
 
     def update(self):
+        if not self.game.history:
+            return
         unused_dies = list(self.game.roll.dies)
         for entity in self.entities:
             render = entity.get_component(c.Render)
@@ -52,7 +50,6 @@ class ArrangeDiesSystem(ecys.System):
             render.image.set_alpha(alpha)
         elif unused_die:
             unused_dies.remove(die)
-
 
 
 @ecys.requires(c.Render, logic.Piece)
@@ -156,9 +153,10 @@ class InputSystem(ecys.System):
     def _was_no_game_active_click(self, event):
         return (event.type == pygame.MOUSEBUTTONUP and
                 event.button == pygame.BUTTON_LEFT and
-                self.client.game.game_over)
+                (self.client.game.game_over or
+                 self.client.first_time_started))
 
-    def _was_no_game_active_s_key_pressed(self, event):
+    def _was_game_over_s_key_pressed(self, event):
         return (event.type == pygame.KEYUP and
                 event.key == pygame.K_s and
                 self.client.game.game_over)
@@ -166,7 +164,8 @@ class InputSystem(ecys.System):
     def _was_game_active_enter_pressed(self, event):
         return (event.type == pygame.KEYUP and
                 event.key == pygame.K_RETURN and
-                not self.client.game.game_over)
+                not self.client.game.game_over and
+                not self.client.first_time_started)
 
     @staticmethod
     def _handle_close_window(event):
@@ -229,22 +228,23 @@ class InputSystem(ecys.System):
             render.visible = False
 
     def _handle_finish_move(self, event):
-        can_finish = (not self.client.game.roll.dies or
-                      not self.client.game.possible_points)
-        if self._was_game_active_enter_pressed(event) and can_finish:
-            self.client.game.roll_dice()
+        if self._was_game_active_enter_pressed(event):
+            can_finish = (not self.client.game.roll.dies or
+                          not self.client.game.possible_points)
+            if can_finish:
+                self.client.game.roll_dice()
 
     def _handle_local_pvp_button_press(self, event):
         if self._was_no_game_active_click(event):
             local_render = self.client.local_pvp_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
-                self.client.game.restart()
+                self.client.restart_game()
 
     def _handle_save_history(self, event):
         win_render = self.client.win_button.get_component(c.Render)
         win_button_pressed = (self._was_no_game_active_click(event)
                               and win_render.rect.collidepoint(event.pos))
-        if win_button_pressed or self._was_no_game_active_s_key_pressed(event):
+        if win_button_pressed or self._was_game_over_s_key_pressed(event):
             self.client.save_history(config.HISTORY_FILENAME)
 
 
@@ -257,15 +257,18 @@ class StateTrackingSystem(ecys.System):
         win_render = self.client.win_button.get_component(c.Render)
         local_render = self.client.local_pvp_button.get_component(c.Render)
         net_render = self.client.net_pvp_button.get_component(c.Render)
-        if self.client.game.game_over:
-            win_render.image = config.MENU_BUTTON_IMAGES[g.WIN][self.client.game.color]
-            win_render.visible = True
+        if (not self.client.game.game_over and
+                not self.client.first_time_started):
+            win_render.visible = False
+            local_render.visible = False
+            net_render.visible = False
+        else:
             local_render.visible = True
             net_render.visible = True
-            return
-        win_render.visible = False
-        local_render.visible = False
-        net_render.visible = False
+            if self.client.game.game_over:
+                game_color = self.client.game.color
+                win_render.image = config.MENU_BUTTON_IMAGES[g.WIN][game_color]
+                win_render.visible = True
 
 
 class AutoRollSystem(ecys.System):
@@ -274,7 +277,8 @@ class AutoRollSystem(ecys.System):
         self.client = client
 
     def update(self):
-        if not self.client.game.history:
+        if (not self.client.game.history and
+                not self.client.first_time_started):
             self.client.game.roll_dice()
 
 

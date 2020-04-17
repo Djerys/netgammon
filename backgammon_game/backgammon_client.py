@@ -1,11 +1,7 @@
 import pygame
 import ecys
 
-import config
-import color
-import graphic as g
-import component as c
-import system as s
+from backgammon_game import color, component as c, config, graphic as g, system as s
 
 
 class BackgammonClient:
@@ -17,6 +13,7 @@ class BackgammonClient:
         self.background_image = config.BACKGROUND_IMAGE
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
+        self.first_time_started = True
         self.local_pvp_button = None
         self.net_pvp_button = None
         self.win_button = None
@@ -27,6 +24,10 @@ class BackgammonClient:
         while True:
             self.world.update()
             self.clock.tick(self.frame_rate)
+
+    def restart_game(self):
+        self.first_time_started = False
+        self.game.restart()
 
     def save_history(self, filename):
         with open(filename, 'w') as history_file:

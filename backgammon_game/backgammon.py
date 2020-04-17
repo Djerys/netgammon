@@ -1,5 +1,4 @@
-import logic
-import color
+from backgammon_game import color, logic
 
 
 class Backgammon:
