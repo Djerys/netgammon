@@ -1,10 +1,42 @@
 import sys
+import socket
 from functools import lru_cache
 
 import pygame
 import ecys
 
-from backgammon_game import color, component as c, config, graphic as g, logic
+import mode
+import logic
+import graphic as g
+import config
+import color
+import component as c
+
+
+@ecys.requires(c.NetPvPButtonInput)
+class NetworkSystem(ecys.System):
+    def __init__(self, client):
+        super().__init__()
+        self.client = client
+        self.socket = None
+
+    def update(self):
+        net_input = self.client.net_pvp_button.get_component(
+            c.NetPvPButtonInput
+        )
+        if net_input.clicked:
+            self._connect()
+            data = self.socket.recv(1024)
+            print(data.decode('utf-8'))
+            net_input.clicked = False
+
+    def _connect(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(
+            (self.client.network_data['host'],
+             self.client.network_data['port'])
+        )
+        self.socket = sock
 
 
 @ecys.requires(c.Render, c.Die)
@@ -143,12 +175,14 @@ class InputSystem(ecys.System):
             self._handle_to_point_press(event)
             self._handle_finish_move(event)
             self._handle_local_pvp_button_press(event)
+            self._handle_net_pvp_button_press(event)
             self._handle_save_history(event)
 
     def _was_game_active_click(self, event):
         return (event.type == pygame.MOUSEBUTTONUP and
                 event.button == pygame.BUTTON_LEFT and
-                not self.client.game.game_over)
+                not self.client.game.game_over and
+                not self.client.first_time_started)
 
     def _was_no_game_active_click(self, event):
         return (event.type == pygame.MOUSEBUTTONUP and
@@ -238,7 +272,18 @@ class InputSystem(ecys.System):
         if self._was_no_game_active_click(event):
             local_render = self.client.local_pvp_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
+                self.client.mode = mode.LOCAL_PVP
                 self.client.restart_game()
+
+    def _handle_net_pvp_button_press(self, event):
+        if self._was_no_game_active_click(event):
+            net_render = self.client.net_pvp_button.get_component(c.Render)
+            if net_render.rect.collidepoint(event.pos):
+                net_input = self.client.net_pvp_button.get_component(
+                    c.NetPvPButtonInput
+                )
+                net_input.clicked = True
+                self.client.mode = mode.NET_PVP
 
     def _handle_save_history(self, event):
         win_render = self.client.win_button.get_component(c.Render)
@@ -257,6 +302,9 @@ class StateTrackingSystem(ecys.System):
         win_render = self.client.win_button.get_component(c.Render)
         local_render = self.client.local_pvp_button.get_component(c.Render)
         net_render = self.client.net_pvp_button.get_component(c.Render)
+        net_input = self.client.net_pvp_button.get_component(c.NetPvPButtonInput)
+        if net_input.clicked:
+            net_render.image = config.MENU_BUTTON_IMAGES[g.NET]['searching']
         if (not self.client.game.game_over and
                 not self.client.first_time_started):
             win_render.visible = False

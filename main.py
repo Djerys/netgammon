@@ -1,5 +1,5 @@
-from backgammon_game.backgammon import Backgammon
-from backgammon_game.backgammon_client import BackgammonClient
+from backgammon import Backgammon
+from backgammon_client import BackgammonClient
 
 game = Backgammon()
 # point = game.board.points[25]

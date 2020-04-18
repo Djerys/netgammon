@@ -33,8 +33,19 @@ class Render(ecys.Component):
 
 
 @dataclass
+class NetPvPButtonInput(ecys.Component):
+    clicked: bool = False
+
+
+@dataclass
 class FromPointInput(ecys.Component):
     clicked: bool = False
+
+
+@dataclass
+class Die(ecys.Component):
+    color: str
+    number: int
 
 
 class ToPoint(ecys.Component):
@@ -43,9 +54,3 @@ class ToPoint(ecys.Component):
 
 class AdditionalBanner(ecys.Component):
     pass
-
-
-@dataclass
-class Die(ecys.Component):
-    color: str
-    number: int

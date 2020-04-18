@@ -1,7 +1,7 @@
 import random
 import operator
 
-from backgammon_game import color
+import color
 
 
 class Piece:

@@ -1,27 +1,56 @@
+# A server for a multi-player backgammon game. I created a
+# new application-level protocol called BGP (Backgammon Game
+# Protocol), which is entirely plain text. The messages of BGP are:
+#
+# Client -> Server
+#   DIES <i> <i>
+#   MOVE <i> <i>
+#   ENDMOVE
+#   QUIT
+#
+# Server -> Client
+#   COLOR <c>
+#   DIES <i> <i>
+#   MOVE <i> <i>
+#   ENDMOVE
+#   QUIT
+
+
+import sys
 import threading
 import socketserver
 
 
-HOST, PORT = 'localhost', 4567
+DIES = 'DIES'
+MOVE = 'MOVE'
+ENDMOVE = 'ENDMOVE'
+QUIT = 'QUIT'
+COLOR = 'COLOR'
 
 
 WHITE = 'W'
 RED = 'R'
 
 
+class QuitMessageException(Exception):
+    pass
+
+
 class PlayersPair:
     _next_pair = None
-    _selection_lock = threading.Lock()
+    _pair_lock = threading.Lock()
 
     def __init__(self):
         self.current_player = None
+        self.lock = threading.Lock()
 
     def switch_current(self):
-        self.current_player = self.current_player.opponent
+        with self.lock:
+            self.current_player = self.current_player.opponent
 
     @classmethod
     def join(cls, player):
-        with cls._selection_lock:
+        with cls._pair_lock:
             if cls._next_pair is None:
                 cls._next_pair = PlayersPair()
                 player.pair = cls._next_pair
@@ -46,35 +75,59 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         client = f'{self.client_address} on {threading.current_thread().name}'
         print(f'Connected: {client}')
         try:
-            self.initialize()
-            self.process_commands()
+            self._initialize()
+            self._process_messages()
         except Exception as e:
             print(e)
         print(f'Closed: {client}')
 
-    def initialize(self):
-        PlayersPair.join(self)
-        self.send(f'WELCOME {self.color}')
-        if self.color == WHITE:
-            self.pair.current_player = self
-            self.send('Waiting wor opponent')
-        else:
-            self.opponent = self.pair.current_player
-            self.opponent.opponent = self
-            self.opponent.send('You start')
-
     def send(self, message):
         self.wfile.write(f'{message}\n'.encode('utf-8'))
 
-    def process_commands(self):
+    def _initialize(self):
+        PlayersPair.join(self)
+        if self.color == WHITE:
+            self.pair.current_player = self
+        else:
+            self.opponent = self.pair.current_player
+            self.opponent.opponent = self
+            self.opponent.send(color_message(WHITE))
+            self.send(color_message(RED))
+
+    def _process_messages(self):
         while True:
-            command = self.rfile.readline()
-            if not command:
+            message = self.rfile.readline()
+            if not message:
                 break
-            command = command.decode('utf-8')
-            print(command)
+            self._process_message(message)
+
+    def _process_message(self, message):
+        message = message.decode('utf-8')
+        if self._is_command_valid(message):
+            if message.startswith(QUIT):
+                self.opponent.send(message)
+                raise QuitMessageException(f'{QUIT} message received')
+            elif self == self.pair.current_player:
+                if message.startswith(ENDMOVE):
+                    self.pair.switch_current()
+                self.opponent.send(message)
+        else:
+            raise ValueError('Invalid protocol message')
+
+    @staticmethod
+    def _is_command_valid(command):
+        return (command.startswith(DIES) or
+                command.startswith(MOVE) or
+                command.startswith(ENDMOVE) or
+                command.startswith(QUIT))
 
 
-with ThreadingTCPServer((HOST, PORT), PlayerHandler) as server:
+def color_message(color):
+    return f'{COLOR} {color}'
+
+
+host, port = sys.argv[1].split(':')
+port = int(port)
+with ThreadingTCPServer((host, port), PlayerHandler) as server:
     print('Backgammon server is running')
     server.serve_forever()

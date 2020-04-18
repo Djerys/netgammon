@@ -1,4 +1,5 @@
-from backgammon_game import color, graphic
+import graphic
+import color
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 600
@@ -57,5 +58,11 @@ MENU_BUTTON_IMAGES = {
         color.RED: 'assets/image/red_wins.png',
         color.WHITE: 'assets/image/white_wins.png'
     },
-    graphic.NET: 'assets/image/net_pvp.png'
+    graphic.NET: {
+        'press': 'assets/image/net_pvp.png',
+        'searching': 'assets/image/searching.png'
+    }
 }
+
+HOST = 'localhost'
+PORT = 34299

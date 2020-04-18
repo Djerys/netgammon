@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from backgammon_game import color
+import color
 
 LOCAL = 0
 WIN = 1

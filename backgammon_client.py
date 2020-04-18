@@ -1,7 +1,11 @@
 import pygame
 import ecys
 
-from backgammon_game import color, component as c, config, graphic as g, system as s
+import system as s
+import graphic as g
+import config
+import color
+import component as c
 
 
 class BackgammonClient:
@@ -13,6 +17,13 @@ class BackgammonClient:
         self.background_image = config.BACKGROUND_IMAGE
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
+        self.network_data = {
+            'host': config.HOST,
+            'port': config.PORT,
+            'connected': False,
+            'color': None
+        }
+        self.mode = None
         self.first_time_started = True
         self.local_pvp_button = None
         self.net_pvp_button = None
@@ -37,6 +48,7 @@ class BackgammonClient:
 
     def _create_world(self):
         world = ecys.World()
+        world.add_system(s.NetworkSystem(self), priority=7)
         world.add_system(s.StateTrackingSystem(self), priority=6)
         world.add_system(s.AutoRollSystem(self), priority=5)
         world.add_system(s.ArrangeDiesSystem(self), priority=4)
@@ -133,9 +145,10 @@ class BackgammonClient:
         )
         self.net_pvp_button = world.create_entity(
             c.Render(
-                config.MENU_BUTTON_IMAGES[g.NET],
+                config.MENU_BUTTON_IMAGES[g.NET]['press'],
                 g.MENU_BUTTON_COORDS[g.NET]
-            )
+            ),
+            c.NetPvPButtonInput()
         )
         self.win_button = world.create_entity(
             c.Render(coords=g.MENU_BUTTON_COORDS[g.WIN])
