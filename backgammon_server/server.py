@@ -72,17 +72,21 @@ class PlayerHandler(socketserver.StreamRequestHandler):
     opponent = None
 
     def handle(self):
-        client = f'{self.client_address} on {threading.current_thread().name}'
-        print(f'Connected: {client}')
+        print(f'Connected: {self}')
         try:
             self._initialize()
             self._process_messages()
         except Exception as e:
             print(e)
-        print(f'Closed: {client}')
+        print(f'Closed: {self}')
+
+    def __str__(self):
+        return f'{self.client_address} on {threading.current_thread().name}'
 
     def send(self, message):
-        self.wfile.write(f'{message}\n'.encode('utf-8'))
+        message = f'{message}\n'.encode('utf-8')
+        self.wfile.write(message)
+        print(f'Sent {message}: {self}')
 
     def _initialize(self):
         PlayersPair.join(self)
@@ -102,24 +106,26 @@ class PlayerHandler(socketserver.StreamRequestHandler):
             self._process_message(message)
 
     def _process_message(self, message):
-        message = message.decode('utf-8')
-        if self._is_command_valid(message):
+        print(f'Received {message}: {self}')
+        if self._is_message_valid(message):
+            message = message.decode('utf-8')
             if message.startswith(QUIT):
                 self.opponent.send(message)
-                raise QuitMessageException(f'{QUIT} message received')
+                raise QuitMessageException(f'{QUIT}: {self}')
             elif self == self.pair.current_player:
                 if message.startswith(ENDMOVE):
                     self.pair.switch_current()
                 self.opponent.send(message)
         else:
-            raise ValueError('Invalid protocol message')
+            raise ValueError(f'Invalid protocol message: {message}')
 
     @staticmethod
-    def _is_command_valid(command):
-        return (command.startswith(DIES) or
-                command.startswith(MOVE) or
-                command.startswith(ENDMOVE) or
-                command.startswith(QUIT))
+    def _is_message_valid(message):
+        message = message.decode('utf-8')
+        return (message.startswith(DIES) or
+                message.startswith(MOVE) or
+                message.startswith(ENDMOVE) or
+                message.startswith(QUIT))
 
 
 def color_message(color):

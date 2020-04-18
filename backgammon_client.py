@@ -1,3 +1,6 @@
+import socket
+import threading
+
 import pygame
 import ecys
 
@@ -20,11 +23,11 @@ class BackgammonClient:
         self.network_data = {
             'host': config.HOST,
             'port': config.PORT,
-            'connected': False,
             'color': None
         }
+        self._socket = None
         self.mode = None
-        self.first_time_started = True
+        self.paused = True
         self.local_pvp_button = None
         self.net_pvp_button = None
         self.win_button = None
@@ -37,7 +40,7 @@ class BackgammonClient:
             self.clock.tick(self.frame_rate)
 
     def restart_game(self):
-        self.first_time_started = False
+        self.paused = False
         self.game.restart()
 
     def save_history(self, filename):
@@ -46,14 +49,41 @@ class BackgammonClient:
                 color = 'White' if number % 2 == 0 else 'Red'
                 history_file.write(f'{number + 1}. {color} {turn}\n')
 
+    @property
+    def socket(self):
+        return self._socket
+
+    def connect(self):
+        if self._socket is not None:
+            return
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.connect(
+            (self.network_data['host'], self.network_data['port'])
+        )
+        recv_thread = threading.Thread(target=self._recv_color)
+        recv_thread.start()
+
+    def _recv_color(self):
+        color = self.socket.recv(32).decode('utf-8')
+        self.network_data['color'] = color[len('COLOR'):].strip()
+        print(self.network_data['color'])
+
+    def disconnect(self):
+        if socket is None:
+            return
+        self._socket.send('QUIT'.encode('utf-8'))
+        self._socket.close()
+        self._socket = None
+        self.network_data['color'] = None
+
     def _create_world(self):
         world = ecys.World()
-        world.add_system(s.NetworkSystem(self), priority=7)
-        world.add_system(s.StateTrackingSystem(self), priority=6)
-        world.add_system(s.AutoRollSystem(self), priority=5)
-        world.add_system(s.ArrangeDiesSystem(self), priority=4)
-        world.add_system(s.ArrangePiecesSystem(self), priority=3)
-        world.add_system(s.InputSystem(self), priority=2)
+        world.add_system(s.StateTrackingSystem(self), priority=7)
+        world.add_system(s.AutoRollSystem(self), priority=6)
+        world.add_system(s.ArrangeDiesSystem(self), priority=5)
+        world.add_system(s.ArrangePiecesSystem(self), priority=4)
+        world.add_system(s.InputSystem(self), priority=3)
+        world.add_system(s.NetworkSystem(self), priority=2)
         world.add_system(s.HintSystem(self), priority=1)
         world.add_system(s.RenderSystem(self),  priority=0)
         self._create_points(world)
