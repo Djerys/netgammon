@@ -29,22 +29,26 @@ class NetworkSystem(ecys.System):
         if self.client.bgp_client.connected:
             if not self.client.net_color:
                 message = self.client.bgp_client.receive()
+                print(message)
                 self.client.net_color = message['arg']
                 self.client.restart_game()
             elif self.client.net_color != self.client.game.color:
                 message = self.client.bgp_client.receive()
+                print(message)
                 if message['command'] == 'MOVE':
                     from_point, to_point = message['args']
                     self.client.game.move(from_point, to_point)
                 elif message['command'] == 'DIES':
                     die1, die2 = message['args']
                     self.client.game.roll_dice(logic.Roll(die1, die2))
+                    print('Rolled', die1, die2)
                 elif message['command'] == 'ENDMOVE':
                     roll = logic.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp_client.send_dies(roll.die1, roll.die2)
                 elif message['command'] == 'QUIT':
                     self.client.bgp_client.disconnect()
+
 
 @ecys.requires(c.Render, c.Die)
 class DiesSystem(ecys.System):
@@ -55,7 +59,13 @@ class DiesSystem(ecys.System):
     def update(self):
         if not self.client.game.history:
             if not self.client.paused:
-                self.client.game.roll_dice()
+                roll = logic.Roll()
+                if self.client.bgp_client.connected:
+                    if self.client.net_color == self.client.game.color:
+                        self.client.bgp_client.send_dies(roll.die1, roll.die2)
+                    else:
+                        return
+                self.client.game.roll_dice(roll)
             else:
                 return
         self._arrange_dies()
@@ -301,7 +311,6 @@ class InputSystem(ecys.System):
                 if self.client.bgp_client.connected:
                     self.client.bgp_client.send_quit()
                     self.client.bgp_client.disconnect()
-                self.client.mode = mode.LOCAL_PVP
                 self.client.restart_game()
 
     def _handle_net_pvp_button_press(self, event):
