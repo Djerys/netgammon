@@ -1,5 +1,5 @@
 import sys
-import socket
+
 from functools import lru_cache
 
 import pygame
@@ -7,9 +7,10 @@ import ecys
 
 import mode
 import logic
-import graphic as g
 import config
 import color
+import bgp_client
+import graphic as g
 import component as c
 
 
@@ -20,47 +21,67 @@ class NetworkSystem(ecys.System):
         self.client = client
 
     def update(self):
-        pass
-        # net_input = self.client.net_pvp_button.get_component(
-        #     c.NetPvPButtonInput
-        # )
-        # if net_input.clicked and self.client.socket:
-        #     self.client.connect()
-        # if self.client.network_data['color']:
-        #     net_input.clicked = False
+        if self.client.bgp_client.connected:
+            try:
+                if not self.client.net_color:
+                    message = self.client.bgp_client.receive()
+                    self.client.net_color = message['arg']
+                    self.client.restart_game()
+                elif self.client.net_color != self.client.game.color:
+                    message = self.client.bgp_client.receive()
+                    if message['command'] == 'MOVE':
+                        from_point, to_point = message['args']
+                        self.client.game.move(from_point, to_point)
+                    elif message['command'] == 'DIES':
+                        die1, die2 = message['args']
+                        self.client.game.roll_dice(logic.Roll(die1, die2))
+                    elif message['command'] == 'ENDMOVE':
+                        roll = logic.Roll()
+                        self.client.game.roll_dice(roll)
+                        self.client.bgp_client.send_dies(roll.die1, roll.die2)
+                    elif message['command'] == 'QUIT':
+                        self.client.bgp_client.disconnect()
+            except bgp_client.BGPTimeoutError:
+                pass
 
 
 @ecys.requires(c.Render, c.Die)
-class ArrangeDiesSystem(ecys.System):
+class DiesSystem(ecys.System):
     def __init__(self, client):
         super().__init__()
-        self.game = client.game
+        self.client = client
 
     def update(self):
-        if not self.game.history:
-            return
-        unused_dies = list(self.game.roll.dies)
+        if not self.client.game.history:
+            if not self.client.paused:
+                self.client.game.roll_dice()
+            else:
+                return
+        self._arrange_dies()
+
+    def _arrange_dies(self):
+        unused_dies = list(self.client.game.roll.dies)
         for entity in self.entities:
             render = entity.get_component(c.Render)
             die_entity = entity.get_component(c.Die)
-            if self.game.color == die_entity.color:
+            if self.client.game.color == die_entity.color:
                 render.visible = True
                 if die_entity.number == 1:
-                    die1 = self.game.roll.die1
+                    die1 = self.client.game.roll.die1
                     render.image = config.DIE_IMAGES[die_entity.color][die1]
-                    self._make_useless_dies_transparent(
+                    self._make_useless_die_transparent(
                         die1, render, unused_dies
                     )
                 elif die_entity.number == 2:
-                    die2 = self.game.roll.die2
+                    die2 = self.client.game.roll.die2
                     render.image = config.DIE_IMAGES[die_entity.color][die2]
-                    self._make_useless_dies_transparent(
+                    self._make_useless_die_transparent(
                         die2, render, unused_dies
                     )
             else:
                 render.visible = False
 
-    def _make_useless_dies_transparent(
+    def _make_useless_die_transparent(
             self,
             die,
             render,
@@ -68,7 +89,7 @@ class ArrangeDiesSystem(ecys.System):
             alpha=100
     ):
         unused_die = die in unused_dies
-        if not unused_die or not self.game.possible_points:
+        if not unused_die or not self.client.game.possible_points:
             render.convert_image()
             render.image.set_alpha(alpha)
         elif unused_die:
@@ -164,7 +185,7 @@ class InputSystem(ecys.System):
             self._handle_close_window(event)
             self._handle_from_point_press(event)
             self._handle_to_point_press(event)
-            self._handle_finish_move(event)
+            self._handle_end_move(event)
             self._handle_local_pvp_button_press(event)
             self._handle_net_pvp_button_press(event)
             self._handle_save_history(event)
@@ -199,8 +220,10 @@ class InputSystem(ecys.System):
 
     def _handle_close_window(self, event):
         if event.type == pygame.QUIT:
-            if self.client._socket:
-                self.client.disconnect()
+            if self.client.bgp_client.connected:
+                if self.client.net_color:
+                    self.client.bgp_client.send_quit()
+                self.client.bgp_client.disconnect()
             pygame.quit()
             sys.exit()
 
@@ -243,6 +266,8 @@ class InputSystem(ecys.System):
                         self.clicked_from):
                     point = entity.get_component(logic.Point)
                     self.client.game.move(self.clicked_from[2], point)
+                    if self.client.bgp_client.connected and self.client.net_color:
+                        self.client.bgp_client.send_move(self.clicked_from[2], point)
                     self.clicked_from[0].clicked = False
                     self.clicked_from[1].visible = False
                     self.clicked_from = None
@@ -258,17 +283,23 @@ class InputSystem(ecys.System):
             render = entity.get_component(c.Render)
             render.visible = False
 
-    def _handle_finish_move(self, event):
+    def _handle_end_move(self, event):
         if self._was_game_active_key_press(event) and event.key == pygame.K_RETURN:
             can_finish = (not self.client.game.roll.dies or
                           not self.client.game.possible_points)
             if can_finish:
-                self.client.game.roll_dice()
+                if self.client.mode == mode.LOCAL_PVP:
+                    self.client.game.roll_dice()
+                elif self.client.mode == mode.NET_PVP:
+                    self.client.bgp_client.send_endmove()
 
     def _handle_local_pvp_button_press(self, event):
         if self._was_no_game_active_click(event):
             local_render = self.client.local_pvp_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
+                if self.client.bgp_client.connected:
+                    self.client.bgp_client.send_quit()
+                    self.client.bgp_client.disconnect()
                 self.client.mode = mode.LOCAL_PVP
                 self.client.restart_game()
 
@@ -279,9 +310,9 @@ class InputSystem(ecys.System):
                 net_input = self.client.net_pvp_button.get_component(
                     c.NetPvPButtonInput
                 )
+                if not self.client.bgp_client.connected:
+                    self.client.bgp_client.connect()
                 net_input.clicked = True
-                self.client.mode = mode.NET_PVP
-                self.client.connect()
 
     def _handle_save_history(self, event):
         win_render = self.client.win_button.get_component(c.Render)
@@ -325,17 +356,6 @@ class StateTrackingSystem(ecys.System):
                 game_color = self.client.game.color
                 win_render.image = config.MENU_BUTTON_IMAGES[g.WIN][game_color]
                 win_render.visible = True
-
-
-class AutoRollSystem(ecys.System):
-    def __init__(self, client):
-        super().__init__()
-        self.client = client
-
-    def update(self):
-        if (not self.client.game.history and
-                not self.client.paused):
-            self.client.game.roll_dice()
 
 
 class HintSystem(ecys.System):

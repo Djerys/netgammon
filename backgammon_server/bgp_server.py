@@ -21,13 +21,6 @@ import threading
 import socketserver
 
 
-DIES = 'DIES'
-MOVE = 'MOVE'
-ENDMOVE = 'ENDMOVE'
-QUIT = 'QUIT'
-COLOR = 'COLOR'
-
-
 WHITE = 'W'
 RED = 'R'
 
@@ -60,6 +53,11 @@ class PlayersPair:
                 player.pair = cls._next_pair
                 cls._next_pair = None
 
+    @classmethod
+    def detach(cls):
+        with cls._pair_lock:
+            cls._next_pair = None
+
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     daemon_threads = True
@@ -78,6 +76,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
             self._process_messages()
         except Exception as e:
             print(e)
+        PlayersPair.detach()
         print(f'Closed: {self}')
 
     def __str__(self):
@@ -109,11 +108,11 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         print(f'Received {message}: {self}')
         if self._is_message_valid(message):
             message = message.decode('utf-8')
-            if message.startswith(QUIT):
+            if message.startswith('QUIT'):
                 self.opponent.send(message)
-                raise QuitMessageException(f'{QUIT}: {self}')
+                raise QuitMessageException(f'QUIT: {self}')
             elif self == self.pair.current_player:
-                if message.startswith(ENDMOVE):
+                if message.startswith('ENDMOVE'):
                     self.pair.switch_current()
                 self.opponent.send(message)
         else:
@@ -122,14 +121,14 @@ class PlayerHandler(socketserver.StreamRequestHandler):
     @staticmethod
     def _is_message_valid(message):
         message = message.decode('utf-8')
-        return (message.startswith(DIES) or
-                message.startswith(MOVE) or
-                message.startswith(ENDMOVE) or
-                message.startswith(QUIT))
+        return (message.startswith('DIES') or
+                message.startswith('MOVE') or
+                message.startswith('ENDMOVE') or
+                message.startswith('QUIT'))
 
 
 def color_message(color):
-    return f'{COLOR} {color}'
+    return f'COLOR {color}'
 
 
 host, port = sys.argv[1].split(':')

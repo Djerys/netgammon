@@ -1,6 +1,3 @@
-import socket
-import threading
-
 import pygame
 import ecys
 
@@ -9,9 +6,10 @@ import graphic as g
 import config
 import color
 import component as c
+from bgp_client import BGPClient
 
 
-class BackgammonClient:
+class BackgammonGameClient:
     def __init__(self, game):
         self.frame_rate = config.FRAME_RATE
         self.surface = pygame.display.set_mode(
@@ -20,13 +18,8 @@ class BackgammonClient:
         self.background_image = config.BACKGROUND_IMAGE
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
-        self.network_data = {
-            'host': config.HOST,
-            'port': config.PORT,
-            'color': None
-        }
-        self._socket = None
-        self.mode = None
+        self.bgp_client = BGPClient(config.HOST, config.PORT)
+        self.net_color = None
         self.paused = True
         self.local_pvp_button = None
         self.net_pvp_button = None
@@ -49,38 +42,10 @@ class BackgammonClient:
                 color = 'White' if number % 2 == 0 else 'Red'
                 history_file.write(f'{number + 1}. {color} {turn}\n')
 
-    @property
-    def socket(self):
-        return self._socket
-
-    def connect(self):
-        if self._socket is not None:
-            return
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.connect(
-            (self.network_data['host'], self.network_data['port'])
-        )
-        recv_thread = threading.Thread(target=self._recv_color)
-        recv_thread.start()
-
-    def _recv_color(self):
-        color = self.socket.recv(32).decode('utf-8')
-        self.network_data['color'] = color[len('COLOR'):].strip()
-        print(self.network_data['color'])
-
-    def disconnect(self):
-        if socket is None:
-            return
-        self._socket.send('QUIT'.encode('utf-8'))
-        self._socket.close()
-        self._socket = None
-        self.network_data['color'] = None
-
     def _create_world(self):
         world = ecys.World()
-        world.add_system(s.StateTrackingSystem(self), priority=7)
-        world.add_system(s.AutoRollSystem(self), priority=6)
-        world.add_system(s.ArrangeDiesSystem(self), priority=5)
+        world.add_system(s.StateTrackingSystem(self), priority=6)
+        world.add_system(s.DiesSystem(self), priority=5)
         world.add_system(s.ArrangePiecesSystem(self), priority=4)
         world.add_system(s.InputSystem(self), priority=3)
         world.add_system(s.NetworkSystem(self), priority=2)
