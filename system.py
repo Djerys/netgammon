@@ -25,8 +25,8 @@ class NetworkSystem(ecys.System):
             pass
 
     def _handle_received(self):
-        if self.client.bgp_client.connected:
-            message = self.client.bgp_client.receive()
+        if self.client.bgp.connected:
+            message = self.client.bgp.receive()
             print(message)
             if not self.client.net_color:
                 if message['command'] == 'COLOR':
@@ -35,7 +35,7 @@ class NetworkSystem(ecys.System):
                     self.client.restart_game()
             else:
                 if message['command'] == 'QUIT':
-                    self.client.bgp_client.disconnect()
+                    self.client.bgp.disconnect()
                 if self.client.net_color == self.client.game.color:
                     if message['command'] == 'DIES':
                         die1, die2 = message['args']
@@ -47,7 +47,7 @@ class NetworkSystem(ecys.System):
                     elif message['command'] == 'ENDMOVE':
                         roll = logic.Roll()
                         self.client.game.roll_dice(roll)
-                        self.client.bgp_client.send_dies(roll.die1, roll.die2)
+                        self.client.bgp.send_dies(roll.die1, roll.die2)
 
 
 class RollSystem(ecys.System):
@@ -59,9 +59,9 @@ class RollSystem(ecys.System):
         if not self.client.game.history:
             if not self.client.paused:
                 roll = logic.Roll()
-                if self.client.bgp_client.connected:
+                if self.client.bgp.connected:
                     if self.client.net_color == color.WHITE:
-                        self.client.bgp_client.send_dies(roll.die1, roll.die2)
+                        self.client.bgp.send_dies(roll.die1, roll.die2)
                     else:
                         return
                 self.client.game.roll_dice(roll)
@@ -238,16 +238,16 @@ class InputSystem(ecys.System):
 
     def _handle_close_window(self, event):
         if event.type == pygame.QUIT:
-            if self.client.bgp_client.connected:
+            if self.client.bgp.connected:
                 if self.client.net_color:
-                    self.client.bgp_client.send_quit()
-                self.client.bgp_client.disconnect()
+                    self.client.bgp.send_quit()
+                self.client.bgp.disconnect()
             pygame.quit()
             sys.exit()
 
     def _handle_from_point_press(self, event):
         if self._was_game_active_click(event):
-            if (self.client.bgp_client.connected and
+            if (self.client.bgp.connected and
                     self.client.net_color != self.client.game.color):
                 return
             from_entities = self.world.entities_with(
@@ -276,7 +276,7 @@ class InputSystem(ecys.System):
 
     def _handle_to_point_press(self, event):
         if self._was_game_active_click(event):
-            if (self.client.bgp_client.connected and
+            if (self.client.bgp.connected and
                     self.client.net_color != self.client.game.color):
                 return
             entities = self.world.entities_with(c.ToPoint, c.Render, logic.Point)
@@ -290,11 +290,11 @@ class InputSystem(ecys.System):
                         self.clicked_from):
                     point = entity.get_component(logic.Point)
                     self.client.game.move(self.clicked_from[2], point)
-                    if (self.client.bgp_client.connected and
+                    if (self.client.bgp.connected and
                             self.client.net_color == self.client.game.color):
                         from_point = self.clicked_from[2].number
                         to_point = point.number
-                        self.client.bgp_client.send_move(from_point, to_point)
+                        self.client.bgp.send_move(from_point, to_point)
                     self.clicked_from[0].clicked = False
                     self.clicked_from[1].visible = False
                     self.clicked_from = None
@@ -315,9 +315,9 @@ class InputSystem(ecys.System):
             can_finish = (not self.client.game.roll.dies or
                           not self.client.game.possible_points)
             if can_finish:
-                if self.client.bgp_client.connected:
+                if self.client.bgp.connected:
                     if self.client.net_color == self.client.game.color:
-                        self.client.bgp_client.send_endmove()
+                        self.client.bgp.send_endmove()
                     else:
                         return
                 else:
@@ -327,9 +327,9 @@ class InputSystem(ecys.System):
         if self._was_no_game_active_click(event):
             local_render = self.client.local_pvp_button.get_component(c.Render)
             if local_render.rect.collidepoint(event.pos):
-                if self.client.bgp_client.connected:
-                    self.client.bgp_client.send_quit()
-                    self.client.bgp_client.disconnect()
+                if self.client.bgp.connected:
+                    self.client.bgp.send_quit()
+                    self.client.bgp.disconnect()
                 self.client.restart_game()
 
     def _handle_net_pvp_button_press(self, event):
@@ -339,9 +339,9 @@ class InputSystem(ecys.System):
                 net_input = self.client.net_pvp_button.get_component(
                     c.NetPvPButtonInput
                 )
-                if self.client.bgp_client.connected:
-                    self.client.bgp_client.disconnect()
-                self.client.bgp_client.connect()
+                if self.client.bgp.connected:
+                    self.client.bgp.disconnect()
+                self.client.bgp.connect()
                 net_input.clicked = True
 
     def _handle_save_history(self, event):

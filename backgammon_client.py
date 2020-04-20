@@ -18,7 +18,7 @@ class BackgammonGameClient:
         self.background_image = config.BACKGROUND_IMAGE
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
-        self.bgp_client = BGPClient(config.HOST, config.PORT)
+        self.bgp = BGPClient(config.HOST, config.PORT)
         self.net_color = None
         self.paused = True
         self.local_pvp_button = None
