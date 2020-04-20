@@ -60,7 +60,7 @@ MENU_BUTTON_IMAGES = {
     },
     graphic.NET: {
         'press': 'assets/image/net_pvp.png',
-        'searching': 'assets/image/searching.png'
+        'pressed': 'assets/image/searching.png'
     }
 }
 

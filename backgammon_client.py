@@ -44,9 +44,10 @@ class BackgammonGameClient:
 
     def _create_world(self):
         world = ecys.World()
-        world.add_system(s.StateTrackingSystem(self), priority=6)
-        world.add_system(s.NetworkSystem(self), priority=5)
-        world.add_system(s.DiesSystem(self), priority=4)
+        world.add_system(s.StateTrackingSystem(self), priority=7)
+        world.add_system(s.NetworkSystem(self), priority=6)
+        world.add_system(s.RollSystem(self), priority=5)
+        world.add_system(s.ArrangeDiesSystem(self), priority=4)
         world.add_system(s.ArrangePiecesSystem(self), priority=3)
         world.add_system(s.InputSystem(self), priority=2)
         world.add_system(s.HintSystem(self), priority=1)

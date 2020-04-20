@@ -15,7 +15,7 @@
 #   ENDMOVE
 #   QUIT
 #
-# Message's size is 11 byte.
+# Message's size is 10 byte.
 
 
 import sys
@@ -103,7 +103,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
 
     def _process_messages(self):
         while True:
-            message = self.rfile.readline()
+            message = self.rfile.read(10)
             if not message:
                 break
             self._process_message(message)
@@ -114,7 +114,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
             message = message.decode('utf-8')
             if message.startswith('QUIT'):
                 self.opponent.send(message)
-                raise QuitMessageException(f'QUIT: {self}')
+                raise QuitMessageException()
             elif self == self.pair.current_player:
                 if message.startswith('ENDMOVE'):
                     self.pair.switch_current()
@@ -132,7 +132,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
 
 
 def color_message(color):
-    return f'COLOR {color}'.ljust(10, ' ') + '\n'
+    return f'COLOR {color}'.ljust(10, ' ')
 
 
 host, port = sys.argv[1].split(':')
