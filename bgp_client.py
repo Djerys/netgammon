@@ -21,10 +21,7 @@ class BGPClient:
         self._socket = None
 
     def receive(self):
-        try:
-            message = self._socket.recv(10)
-        except socket.timeout:
-            raise BGPTimeoutError()
+        message = self._socket.recv(10)
         message = message.decode('utf-8')
         formed_message = {'command': message[:(len(message.split()[0]))]}
         if message.startswith('DIES') or message.startswith('MOVE'):
@@ -48,7 +45,3 @@ class BGPClient:
     def send_quit(self):
         message = 'QUIT'.ljust(10, ' ')
         self._socket.send(message.encode('utf-8'))
-
-
-class BGPTimeoutError(Exception):
-    pass

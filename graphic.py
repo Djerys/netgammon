@@ -8,14 +8,8 @@ WIN = 1
 NET = 2
 
 
-class Coordinates(ABC):
-    @abstractmethod
-    def __getitem__(self, item):
-        pass
-
-
 @dataclass
-class DiceCoordinates(Coordinates):
+class DiceCoordinates:
     red_x1: int = 342
     red_x2: int = 380
     white_x1: int = 92
@@ -37,7 +31,7 @@ class DiceCoordinates(Coordinates):
 
 
 @dataclass
-class PointCoordinates(Coordinates):
+class PointCoordinates:
     red_y: int
     white_y: int
     home_x: int

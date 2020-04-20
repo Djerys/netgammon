@@ -1,4 +1,5 @@
 import sys
+import socket
 from functools import lru_cache
 
 import pygame
@@ -7,7 +8,6 @@ import ecys
 import logic
 import config
 import color
-import bgp_client
 import graphic as g
 import component as c
 
@@ -21,7 +21,7 @@ class NetworkSystem(ecys.System):
     def update(self):
         try:
             self._handle_received()
-        except bgp_client.BGPTimeoutError:
+        except socket.timeout:
             pass
 
     def _handle_received(self):
