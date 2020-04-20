@@ -329,7 +329,7 @@ class InputSystem(ecys.System):
                     self.client.bgp.send_quit()
                     self.client.bgp.close()
                     self.client.network_game_color = None
-                self.client.play()
+                self.client.restart_game()
 
     def _handle_net_pvp_button_press(self, event):
         if self._was_no_game_active_click(event):
