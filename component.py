@@ -33,12 +33,7 @@ class Render(ecys.Component):
 
 
 @dataclass
-class NetPvPButtonInput(ecys.Component):
-    clicked: bool = False
-
-
-@dataclass
-class FromPointInput(ecys.Component):
+class Input(ecys.Component):
     clicked: bool = False
 
 
@@ -46,6 +41,10 @@ class FromPointInput(ecys.Component):
 class Die(ecys.Component):
     color: str
     number: int
+
+
+class FromPoint(ecys.Component):
+    pass
 
 
 class ToPoint(ecys.Component):

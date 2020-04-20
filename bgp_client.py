@@ -8,15 +8,15 @@ class BGPClient:
         self._socket = None
 
     @property
-    def connected(self):
-        return self._socket is not None
+    def closed(self):
+        return self._socket is None
 
     def connect(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.connect((self.host, self.port))
         self._socket.settimeout(self.timeout)
 
-    def disconnect(self):
+    def close(self):
         self._socket.close()
         self._socket = None
 
@@ -29,6 +29,14 @@ class BGPClient:
         elif message.startswith('COLOR'):
             formed_message['arg'] = message[5:].strip()
         return formed_message
+
+    def receive_or_close(self):
+        try:
+            return self.receive()
+        except socket.timeout as e:
+            raise e
+        except (socket.error, ConnectionError):
+            self.close()
 
     def send_dies(self, die1, die2):
         message = f'DIES {die1} {die2}'.ljust(10, ' ')

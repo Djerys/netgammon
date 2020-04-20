@@ -105,12 +105,14 @@ class BackgammonGameClient:
     def _create_from_points(self, world):
         world.create_entity(
             c.Render(config.WHITE_FROM_IMAGE, g.FROM_COORDS[0]),
-            c.FromPointInput(),
+            c.FromPoint(),
+            c.Input(),
             self.game.board.points[0]
         )
         world.create_entity(
             c.Render(config.RED_FROM_IMAGE, g.FROM_COORDS[25]),
-            c.FromPointInput(),
+            c.FromPoint(),
+            c.Input(),
             self.game.board.points[25]
         )
         image = config.RED_FROM_IMAGE
@@ -119,7 +121,8 @@ class BackgammonGameClient:
                 image = config.WHITE_FROM_IMAGE
             world.create_entity(
                 c.Render(image, g.FROM_COORDS[point.number]),
-                c.FromPointInput(),
+                c.FromPoint(),
+                c.Input(),
                 point
             )
 
@@ -144,7 +147,7 @@ class BackgammonGameClient:
                 config.MENU_BUTTON_IMAGES[g.NET]['press'],
                 g.MENU_BUTTON_COORDS[g.NET]
             ),
-            c.NetPvPButtonInput()
+            c.Input()
         )
         self.win_button = world.create_entity(
             c.Render(coords=g.MENU_BUTTON_COORDS[g.WIN])
