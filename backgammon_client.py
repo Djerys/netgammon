@@ -22,7 +22,6 @@ class BackgammonGameClient:
         self.state = state.LockState(self)
         self.bgp = BGPClient((config.HOST, config.PORT))
         self.network_game_color = None
-        self.paused = True
         self.local_button = None
         self.network_button = None
         self.state_button = None
@@ -34,10 +33,6 @@ class BackgammonGameClient:
             self.world.update()
             self.clock.tick(self.frame_rate)
 
-    def restart_game(self):
-        self.paused = False
-        self.game.restart()
-
     def save_history(self, filename):
         with open(filename, 'w') as history_file:
             for number, turn in enumerate(self.game.history):
@@ -46,9 +41,8 @@ class BackgammonGameClient:
 
     def _create_world(self):
         world = ecys.World()
-        world.add_system(s.StateTrackingSystem(self), priority=7)
-        world.add_system(s.NetworkSystem(self), priority=6)
-        world.add_system(s.RollSystem(self), priority=5)
+        world.add_system(s.StateViewSystem(self), priority=6)
+        world.add_system(s.NetworkSystem(self), priority=5)
         world.add_system(s.ArrangeDiesSystem(self), priority=4)
         world.add_system(s.ArrangePiecesSystem(self), priority=3)
         world.add_system(s.InputSystem(self), priority=2)
@@ -95,10 +89,7 @@ class BackgammonGameClient:
                     image = config.RED_PIECE_IMAGE
                 else:
                     image = config.WHITE_PIECE_IMAGE
-                world.create_entity(
-                    c.Render(image),
-                    piece
-                )
+                world.create_entity(c.Render(image), piece)
 
     def _create_points(self, world):
         self._create_from_points(world)

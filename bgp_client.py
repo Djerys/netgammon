@@ -30,14 +30,6 @@ class BGPClient:
             formed_message['arg'] = message[5:].strip()
         return formed_message
 
-    def receive_or_close(self):
-        try:
-            return self.receive()
-        except socket.timeout as e:
-            raise e
-        except (socket.error, ConnectionError):
-            self.close()
-
     def send_dies(self, die1, die2):
         message = f'DIES {die1} {die2}'.ljust(10, ' ')
         self._socket.send(message.encode('utf-8'))

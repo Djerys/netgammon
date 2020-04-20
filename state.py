@@ -61,8 +61,12 @@ class LockState(State):
     def start_network_game(self):
         if not self.client.bgp.closed:
             self.client.bgp.close()
-        self.client.bgp.connect()
-        self.client.state = SearchingOpponentState(self.client)
+        try:
+            self.client.bgp.connect()
+        except (socket.error, ConnectionError):
+            self.client.state = DisconnectedState(self.client)
+        else:
+            self.client.state = SearchingOpponentState(self.client)
 
     @State.possible_points.getter
     def possible_points(self):
@@ -103,7 +107,7 @@ class PauseState(LockState):
 class SearchingOpponentState(LockState):
     def start_local_game(self):
         self.client.bgp.close()
-        self.client.state = NetworkPlayingState(self.client)
+        super().start_local_game()
 
     def start_network_game(self):
         pass
@@ -115,14 +119,18 @@ class SearchingOpponentState(LockState):
         render.image = config.MENU_BUTTON_IMAGES[g.NET]['pressed']
 
     def handle_received(self):
+        print('a')
         try:
             message = self.client.bgp.receive()
+            print(message)
             if message['command'] == 'COLOR':
                 self.client.network_game_color = message['arg']
-                self.client.restart_game()
+                self.client.game.restart()
                 if self.client.network_game_color == color.WHITE:
-                    self.client.game_roll_dice()
-                    self.client.bgp.send_dies(self.client.game.roll)
+                    roll = logic.Roll()
+                    self.client.game.roll_dice(roll)
+                    self.client.bgp.send_dies(roll.die1, roll.die2)
+                    self.client.state = NetworkPlayingState(self.client)
         except socket.timeout as e:
             raise e
         except (socket.error, ConnectionError):
@@ -161,6 +169,10 @@ class LocalPlayingState(PlayingState):
 
 class NetworkPlayingState(PlayingState):
     def move(self, from_point, to_point):
+        if isinstance(from_point, logic.Point):
+            from_point = from_point.number
+        if isinstance(to_point, logic.Point):
+            to_point = to_point.number
         super().move(from_point, to_point)
         self.client.bgp.send_move(from_point, to_point)
 
@@ -169,10 +181,13 @@ class NetworkPlayingState(PlayingState):
         self._check_win_state()
 
     def handle_received(self):
+        print('b')
         try:
             message = self.client.bgp.receive()
+            print(message)
             if message['command'] == 'QUIT':
                 self.client.bgp.close()
+                self.client.state = DisconnectedState(self.client)
             if self.client.network_game_color == self.client.game.color:
                 if message['command'] == 'DIES':
                     die1, die2 = message['args']
