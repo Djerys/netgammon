@@ -14,6 +14,8 @@
 #   MOVE <i> <i>
 #   ENDMOVE
 #   QUIT
+#
+# Message's size is 11 byte.
 
 
 import sys
@@ -74,6 +76,8 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         try:
             self._initialize()
             self._process_messages()
+        except QuitMessageException:
+            pass
         except Exception as e:
             print(e)
         PlayersPair.detach()
@@ -83,7 +87,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         return f'{self.client_address} on {threading.current_thread().name}'
 
     def send(self, message):
-        message = f'{message}\n'.encode('utf-8')
+        message = message.encode('utf-8')
         self.wfile.write(message)
         print(f'Sent {message}: {self}')
 
@@ -128,7 +132,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
 
 
 def color_message(color):
-    return f'COLOR {color}'
+    return f'COLOR {color}'.ljust(10, ' ') + '\n'
 
 
 host, port = sys.argv[1].split(':')

@@ -1,5 +1,4 @@
 import sys
-
 from functools import lru_cache
 
 import pygame
@@ -27,27 +26,27 @@ class NetworkSystem(ecys.System):
 
     def _handle_received(self):
         if self.client.bgp_client.connected:
+            message = self.client.bgp_client.receive()
+            print(message)
             if not self.client.net_color:
-                message = self.client.bgp_client.receive()
-                print(message)
-                self.client.net_color = message['arg']
-                self.client.restart_game()
-            elif self.client.net_color != self.client.game.color:
-                message = self.client.bgp_client.receive()
-                print(message)
-                if message['command'] == 'MOVE':
-                    from_point, to_point = message['args']
-                    self.client.game.move(from_point, to_point)
-                elif message['command'] == 'DIES':
-                    die1, die2 = message['args']
-                    self.client.game.roll_dice(logic.Roll(die1, die2))
-                    print('Rolled', die1, die2)
-                elif message['command'] == 'ENDMOVE':
-                    roll = logic.Roll()
-                    self.client.game.roll_dice(roll)
-                    self.client.bgp_client.send_dies(roll.die1, roll.die2)
-                elif message['command'] == 'QUIT':
+                if message['command'] == 'COLOR':
+                    self.client.net_color = message['arg']
+                    self.client.restart_game()
+            else:
+                if message['command'] == 'QUIT':
                     self.client.bgp_client.disconnect()
+                if self.client.net_color == self.client.game.color:
+                    if message['command'] == 'DIES':
+                        die1, die2 = message['args']
+                        self.client.game.roll_dice(logic.Roll(die1, die2))
+                elif self.client.net_color != self.client.game.color:
+                    if message['command'] == 'MOVE':
+                        from_point, to_point = message['args']
+                        self.client.game.move(from_point, to_point)
+                    elif message['command'] == 'ENDMOVE':
+                        roll = logic.Roll()
+                        self.client.game.roll_dice(roll)
+                        self.client.bgp_client.send_dies(roll.die1, roll.die2)
 
 
 @ecys.requires(c.Render, c.Die)
@@ -61,7 +60,7 @@ class DiesSystem(ecys.System):
             if not self.client.paused:
                 roll = logic.Roll()
                 if self.client.bgp_client.connected:
-                    if self.client.net_color == self.client.game.color:
+                    if self.client.net_color == color.WHITE:
                         self.client.bgp_client.send_dies(roll.die1, roll.die2)
                     else:
                         return

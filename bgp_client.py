@@ -22,7 +22,7 @@ class BGPClient:
 
     def receive(self):
         try:
-            message = self._socket.recv(32)
+            message = self._socket.recv(11)
         except socket.timeout:
             raise BGPTimeoutError()
         message = message.decode('utf-8')
@@ -34,16 +34,20 @@ class BGPClient:
         return formed_message
 
     def send_dies(self, die1, die2):
-        self._socket.send(f'DIES {die1} {die2}\n'.encode('utf-8'))
+        message = f'DIES {die1} {die2}'.ljust(10, ' ') + '\n'
+        self._socket.send(message.encode('utf-8'))
 
     def send_move(self, from_point, to_point):
-        self._socket.send(f'MOVE {from_point} {to_point}\n'.encode('utf-8'))
+        message = f'MOVE {from_point} {to_point}'.ljust(10, ' ') + '\n'
+        self._socket.send(message.encode('utf-8'))
 
     def send_endmove(self):
-        self._socket.send('ENDMOVE\n'.encode('utf-8'))
+        message = 'ENDMOVE'.ljust(10, ' ') + '\n'
+        self._socket.send(message.encode('utf-8'))
 
     def send_quit(self):
-        self._socket.send('QUIT\n'.encode('utf-8'))
+        message = 'QUIT'.ljust(10, ' ') + '\n'
+        self._socket.send(message.encode('utf-8'))
 
 
 class BGPTimeoutError(Exception):
