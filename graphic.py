@@ -4,8 +4,10 @@ from dataclasses import dataclass
 import color
 
 LOCAL = 0
-WIN = 1
+STATE = 1
 NET = 2
+
+DISCONNECT = 'D'
 
 
 @dataclass
@@ -114,6 +116,6 @@ BANNER_COORDS = FromPointCoordinates(
 )
 MENU_BUTTON_COORDS = {
     LOCAL: (190, 205),
-    WIN: (190, 270),
+    STATE: (190, 270),
     NET: (190, 335)
 }

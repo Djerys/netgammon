@@ -1,11 +1,12 @@
 import pygame
 import ecys
 
-import system as s
-import graphic as g
 import config
 import color
+import state
 import component as c
+import system as s
+import graphic as g
 from bgp_client import BGPClient
 
 
@@ -18,12 +19,13 @@ class BackgammonGameClient:
         self.background_image = config.BACKGROUND_IMAGE
         pygame.display.set_caption(config.CAPTION)
         self.clock = pygame.time.Clock()
-        self.bgp = BGPClient(config.HOST, config.PORT)
-        self.net_color = None
+        self.state = state.LockState(self)
+        self.bgp = BGPClient((config.HOST, config.PORT))
+        self.network_game_color = None
         self.paused = True
-        self.local_pvp_button = None
-        self.net_pvp_button = None
-        self.win_button = None
+        self.local_button = None
+        self.network_button = None
+        self.state_button = None
         self.game = game
         self.world = self._create_world()
 
@@ -136,19 +138,19 @@ class BackgammonGameClient:
             )
 
     def _create_menu_buttons(self, world):
-        self.local_pvp_button = world.create_entity(
+        self.local_button = world.create_entity(
             c.Render(
                 config.MENU_BUTTON_IMAGES[g.LOCAL],
                 g.MENU_BUTTON_COORDS[g.LOCAL]
             )
         )
-        self.net_pvp_button = world.create_entity(
+        self.network_button = world.create_entity(
             c.Render(
                 config.MENU_BUTTON_IMAGES[g.NET]['press'],
                 g.MENU_BUTTON_COORDS[g.NET]
             ),
             c.Input()
         )
-        self.win_button = world.create_entity(
-            c.Render(coords=g.MENU_BUTTON_COORDS[g.WIN])
+        self.state_button = world.create_entity(
+            c.Render(coords=g.MENU_BUTTON_COORDS[g.STATE])
         )

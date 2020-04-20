@@ -2,8 +2,8 @@ import socket
 
 
 class BGPClient:
-    def __init__(self, host, port, timeout=0.1):
-        self.host, self.port = host, port
+    def __init__(self, connection, timeout=0.1):
+        self.connection = connection
         self.timeout = timeout
         self._socket = None
 
@@ -13,7 +13,7 @@ class BGPClient:
 
     def connect(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.connect((self.host, self.port))
+        self._socket.connect(self.connection)
         self._socket.settimeout(self.timeout)
 
     def close(self):
@@ -46,7 +46,7 @@ class BGPClient:
         message = f'MOVE {from_point} {to_point}'.ljust(10, ' ')
         self._socket.send(message.encode('utf-8'))
 
-    def send_endmove(self):
+    def send_end_move(self):
         message = 'ENDMOVE'.ljust(10, ' ')
         self._socket.send(message.encode('utf-8'))
 

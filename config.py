@@ -54,9 +54,10 @@ BANNER_IMAGES = {
 
 MENU_BUTTON_IMAGES = {
     graphic.LOCAL: 'assets/image/local_pvp.png',
-    graphic.WIN: {
+    graphic.STATE: {
         color.RED: 'assets/image/red_wins.png',
-        color.WHITE: 'assets/image/white_wins.png'
+        color.WHITE: 'assets/image/white_wins.png',
+        graphic.DISCONNECT: 'assets/image/disconnect.png'
     },
     graphic.NET: {
         'press': 'assets/image/net_pvp.png',
