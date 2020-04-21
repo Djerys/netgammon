@@ -48,11 +48,11 @@ class PlayersCouple:
         with cls._couple_lock:
             if cls._next_couple is None:
                 cls._next_couple = PlayersCouple()
-                player.pair = cls._next_couple
+                player.couple = cls._next_couple
                 player.color = WHITE
             else:
                 player.color = RED
-                player.pair = cls._next_couple
+                player.couple = cls._next_couple
                 cls._next_couple = None
 
 
@@ -63,7 +63,7 @@ class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 class PlayerHandler(socketserver.StreamRequestHandler):
     color = None
-    pair = None
+    couple = None
     opponent = None
 
     def handle(self):
@@ -88,9 +88,9 @@ class PlayerHandler(socketserver.StreamRequestHandler):
     def _initialize(self):
         PlayersCouple.join(self)
         if self.color == WHITE:
-            self.pair.current_player = self
+            self.couple.current_player = self
         else:
-            self.opponent = self.pair.current_player
+            self.opponent = self.couple.current_player
             self.opponent.opponent = self
             self.opponent.send(color_message(WHITE))
             self.send(color_message(RED))
@@ -109,9 +109,9 @@ class PlayerHandler(socketserver.StreamRequestHandler):
             if message.startswith('QUIT'):
                 self.opponent.send(message)
                 raise QuitMessageException()
-            elif self == self.pair.current_player:
+            elif self == self.couple.current_player:
                 if message.startswith('ENDMOVE'):
-                    self.pair.switch_current()
+                    self.couple.switch_current()
                 self.opponent.send(message)
         else:
             raise ValueError(f'Invalid protocol message: {message}')
