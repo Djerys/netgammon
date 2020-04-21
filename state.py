@@ -144,7 +144,6 @@ class SearchingOpponentState(LockState):
     def handle_received(self):
         try:
             message = self.client.bgp.receive()
-            print(message)
             if message['command'] == 'COLOR':
                 self.client.network_game_color = message['arg']
                 self.client.restart()
@@ -209,7 +208,6 @@ class NetworkPlayingState(_PlayingState):
     def handle_received(self):
         try:
             message = self.client.bgp.receive()
-            print(message)
             if message['command'] == 'QUIT':
                 self.client.bgp.close()
                 self.client.state = DisconnectedState(self.client)
