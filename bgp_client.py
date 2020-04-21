@@ -13,8 +13,8 @@ class BGPClient:
 
     def connect(self):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.connect(self.connection)
         self._socket.settimeout(self.timeout)
+        self._socket.connect(self.connection)
 
     def close(self):
         self._socket.close()

@@ -60,6 +60,10 @@ class State:
 
 
 class LockState(State):
+    """Lock state is a state when the game started for the first time.
+
+    It's base class for all states when you cannot play.
+    """
     def start_local_game(self):
         self.client.game.restart()
         self.client.game.roll_dice()
