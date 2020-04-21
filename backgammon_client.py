@@ -26,8 +26,6 @@ class BackgammonGameClient:
         self.network_button = None
         self.state_button = None
         self.game = game
-        self._from_points = []
-        self._to_points = []
         self.world = self._create_world()
 
     def run(self):
@@ -46,12 +44,14 @@ class BackgammonGameClient:
                 history_file.write(f'{number + 1}. {color} {turn}\n')
 
     def _points_on_start(self):
-        for point_entity in self._from_points + self._to_points:
+        for point_entity in self.world.entities_with(c.FromPoint):
+            render = point_entity.get_component(c.Render)
+            input = point_entity.get_component(c.Input)
+            render.visible = False
+            input.clicked = False
+        for point_entity in self.world.entities_with(c.ToPoint):
             render = point_entity.get_component(c.Render)
             render.visible = False
-        for point_entity in self._from_points:
-            input = point_entity.get_component(c.Input)
-            input.clicked = False
 
     def _create_world(self):
         world = ecys.World()
@@ -110,37 +110,37 @@ class BackgammonGameClient:
         self._create_to_points(world)
 
     def _create_from_points(self, world):
-        self._from_points.append(world.create_entity(
+        world.create_entity(
             c.Render(config.WHITE_FROM_IMAGE, g.FROM_COORDS[0]),
             c.FromPoint(),
             c.Input(),
             self.game.board.points[0]
-        ))
-        self._from_points.append(world.create_entity(
+        )
+        world.create_entity(
             c.Render(config.RED_FROM_IMAGE, g.FROM_COORDS[25]),
             c.FromPoint(),
             c.Input(),
             self.game.board.points[25]
-        ))
+        )
         image = config.RED_FROM_IMAGE
         for point in self.game.board.points[1:25]:
             if point.number >= 13:
                 image = config.WHITE_FROM_IMAGE
-            self._from_points.append(world.create_entity(
+            world.create_entity(
                 c.Render(image, g.FROM_COORDS[point.number]),
                 c.FromPoint(),
                 c.Input(),
                 point
-            ))
+            )
 
     def _create_to_points(self, world):
         image = config.TO_IMAGE
         for point in self.game.board.points:
-            self._to_points.append(world.create_entity(
+            world.create_entity(
                 c.Render(image, g.TO_COORDS[point.number]),
                 c.ToPoint(),
                 point
-            ))
+            )
 
     def _create_menu_buttons(self, world):
         self.local_button = world.create_entity(
