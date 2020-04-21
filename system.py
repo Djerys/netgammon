@@ -277,7 +277,7 @@ class HintSystem(ecys.System):
             return
         point = point_entity.get_component(logic.Point)
         try:
-            move = self.game.board.possible_moves(self.game.roll, point.number)
+            move = self.game.board.possible_moves(self.game.roll, point)
             self._make_visible_possibles(move)
         except AssertionError:
             pass

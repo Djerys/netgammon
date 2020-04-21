@@ -21,6 +21,7 @@
 import sys
 import threading
 import socketserver
+import random
 
 
 WHITE = 'W'
@@ -32,8 +33,9 @@ class QuitMessageException(Exception):
 
 
 class PlayersCouple:
-    _next_couple = None
+    _first_connected_player = None
     _couple_lock = threading.Lock()
+    colors = [WHITE, RED]
 
     def __init__(self):
         self.current_player = None
@@ -46,14 +48,25 @@ class PlayersCouple:
     @classmethod
     def join(cls, player):
         with cls._couple_lock:
-            if cls._next_couple is None:
-                cls._next_couple = PlayersCouple()
-                player.couple = cls._next_couple
-                player.color = WHITE
+            if cls._first_connected_player is None:
+                random.shuffle(cls.colors)
+                player.color = cls.colors[0]
+                player.couple = None
+                cls._first_connected_player = player
             else:
-                player.color = RED
-                player.couple = cls._next_couple
-                cls._next_couple = None
+                player1 = cls._first_connected_player
+                player2 = player
+                player2.color = cls.colors[1]
+                player1.opponent = player2
+                player2.opponent = player1
+                couple = PlayersCouple()
+                if player1.color == WHITE:
+                    couple.current_player = player1
+                else:
+                    couple.current_player = player2
+                player1.couple = couple
+                player2.couple = couple
+                cls._first_connected_player = None
 
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -87,13 +100,9 @@ class PlayerHandler(socketserver.StreamRequestHandler):
 
     def _initialize(self):
         PlayersCouple.join(self)
-        if self.color == WHITE:
-            self.couple.current_player = self
-        else:
-            self.opponent = self.couple.current_player
-            self.opponent.opponent = self
-            self.opponent.send(color_message(WHITE))
-            self.send(color_message(RED))
+        if self.couple:
+            self.send(color_message(self.color))
+            self.opponent.send(color_message(self.opponent.color))
 
     def _process_messages(self):
         while True:

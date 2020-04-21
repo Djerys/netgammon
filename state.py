@@ -65,7 +65,7 @@ class LockState(State):
     It's base class for all states when you cannot play.
     """
     def start_local_game(self):
-        self.client.game.restart()
+        self.client.restart()
         self.client.game.roll_dice()
         self.client.state = LocalPlayingState(self.client)
 
@@ -111,6 +111,12 @@ class PauseState(LockState):
         super().__init__(client)
         self.from_state = from_state
 
+    def start_local_game(self):
+        if isinstance(self.from_state, NetworkPlayingState):
+            self.client.bgp.send_quit()
+            self.client.bgp.close()
+        super().start_local_game()
+
     def pause(self):
         self.client.state = self.from_state
 
@@ -141,7 +147,7 @@ class SearchingOpponentState(LockState):
             print(message)
             if message['command'] == 'COLOR':
                 self.client.network_game_color = message['arg']
-                self.client.game.restart()
+                self.client.restart()
                 if self.client.network_game_color == color.WHITE:
                     roll = logic.Roll()
                     self.client.game.roll_dice(roll)
@@ -165,7 +171,7 @@ class DisconnectedState(LockState):
         render.image = config.MENU_BUTTON_IMAGES[g.STATE][g.DISCONNECT]
 
 
-class PlayingState(State):
+class _PlayingState(State):
     """Base class for local and network playing states. Do not use."""
     def pause(self):
         self.client.state = PauseState(self.client, self)
@@ -179,7 +185,7 @@ class PlayingState(State):
             self.client.state = WinState(self.client)
 
 
-class LocalPlayingState(PlayingState):
+class LocalPlayingState(_PlayingState):
     def end_move(self):
         self.client.game.roll_dice()
 
@@ -188,7 +194,7 @@ class LocalPlayingState(PlayingState):
         return self.client.game.possible_points
 
 
-class NetworkPlayingState(PlayingState):
+class NetworkPlayingState(_PlayingState):
     def move(self, from_point, to_point):
         if isinstance(from_point, logic.Point):
             from_point = from_point.number
