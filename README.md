@@ -7,3 +7,21 @@ specified when starting _bgp_server.py_
 Example of using:
 
     python bgp_server.py localhost:34299
+
+
+Screenshots:
+
+
+![](https://github.com/Djerys/netgammon/blob/master/screens/screen1.png)
+
+
+![](https://github.com/Djerys/netgammon/blob/master/screens/screen2.png)
+
+
+![](https://github.com/Djerys/netgammon/blob/master/screens/screen3.png)
+
+
+![](https://github.com/Djerys/netgammon/blob/master/screens/screen4.png)
+
+
+![](https://github.com/Djerys/netgammon/blob/master/screens/screen5.png)
