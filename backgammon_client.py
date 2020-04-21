@@ -139,8 +139,7 @@ class BackgammonGameClient:
             c.Render(
                 config.MENU_BUTTON_IMAGES[g.NET]['press'],
                 g.MENU_BUTTON_COORDS[g.NET]
-            ),
-            c.Input()
+            )
         )
         self.state_button = world.create_entity(
             c.Render(coords=g.MENU_BUTTON_COORDS[g.STATE])

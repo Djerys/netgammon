@@ -171,12 +171,7 @@ class InputSystem(ecys.System):
 
     def _handle_close_window(self, event):
         if event.type == pygame.QUIT:
-            if not self.client.bgp.closed:
-                if self.client.network_game_color:
-                    self.client.bgp.send_quit()
-                self.client.bgp.close()
-            pygame.quit()
-            sys.exit()
+            self.client.state.close_window()
 
     def _handle_from_point_press(self, event):
         if self._button_clicked(event):
@@ -188,7 +183,7 @@ class InputSystem(ecys.System):
                 render = entity.get_component(c.Render)
                 point = entity.get_component(logic.Point)
                 if (render.rect.collidepoint(event.pos) and
-                        point in self.client.game.possible_points):
+                        point in self.client.state.possible_points):
                     render.visible = True
                     self._make_to_points_invisible()
                     input.clicked = True
@@ -232,10 +227,7 @@ class InputSystem(ecys.System):
 
     def _handle_end_move(self, event):
         if event.type == pygame.KEYUP and event.key == pygame.K_RETURN:
-            can_finish = (not self.client.game.roll.dies or
-                          not self.client.game.possible_points)
-            if can_finish:
-                self.client.state.end_move()
+            self.client.state.end_move()
 
     def _handle_start_local_game(self, event):
         if self._button_clicked(event):

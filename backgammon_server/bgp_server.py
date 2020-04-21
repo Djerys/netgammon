@@ -31,34 +31,29 @@ class QuitMessageException(Exception):
     pass
 
 
-class PlayersPair:
-    _next_pair = None
-    _pair_lock = threading.Lock()
+class PlayersCouple:
+    _next_couple = None
+    _couple_lock = threading.Lock()
 
     def __init__(self):
         self.current_player = None
-        self.lock = threading.Lock()
+        self._lock = threading.Lock()
 
     def switch_current(self):
-        with self.lock:
+        with self._lock:
             self.current_player = self.current_player.opponent
 
     @classmethod
     def join(cls, player):
-        with cls._pair_lock:
-            if cls._next_pair is None:
-                cls._next_pair = PlayersPair()
-                player.pair = cls._next_pair
+        with cls._couple_lock:
+            if cls._next_couple is None:
+                cls._next_couple = PlayersCouple()
+                player.pair = cls._next_couple
                 player.color = WHITE
             else:
                 player.color = RED
-                player.pair = cls._next_pair
-                cls._next_pair = None
-
-    @classmethod
-    def detach(cls):
-        with cls._pair_lock:
-            cls._next_pair = None
+                player.pair = cls._next_couple
+                cls._next_couple = None
 
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -80,7 +75,6 @@ class PlayerHandler(socketserver.StreamRequestHandler):
             pass
         except Exception as e:
             print(e)
-        PlayersPair.detach()
         print(f'Closed: {self}')
 
     def __str__(self):
@@ -92,7 +86,7 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         print(f'Sent {message}: {self}')
 
     def _initialize(self):
-        PlayersPair.join(self)
+        PlayersCouple.join(self)
         if self.color == WHITE:
             self.pair.current_player = self
         else:

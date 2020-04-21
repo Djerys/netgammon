@@ -1,5 +1,8 @@
 import socket
 
+import pygame
+import sys
+
 import config
 import color
 import logic
@@ -31,6 +34,10 @@ class State:
 
     def end_move(self):
         pass
+
+    def close_window(self):
+        pygame.quit()
+        sys.exit()
 
     @property
     def possible_points(self):
@@ -103,6 +110,12 @@ class PauseState(LockState):
     def pause(self):
         self.client.state = self.from_state
 
+    def handle_received(self):
+        self.from_state.handle_received()
+
+    def close_window(self):
+        self.from_state.close_window()
+
 
 class SearchingOpponentState(LockState):
     def start_local_game(self):
@@ -119,7 +132,6 @@ class SearchingOpponentState(LockState):
         render.image = config.MENU_BUTTON_IMAGES[g.NET]['pressed']
 
     def handle_received(self):
-        print('a')
         try:
             message = self.client.bgp.receive()
             print(message)
@@ -130,11 +142,15 @@ class SearchingOpponentState(LockState):
                     roll = logic.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp.send_dies(roll.die1, roll.die2)
-                    self.client.state = NetworkPlayingState(self.client)
+                self.client.state = NetworkPlayingState(self.client)
         except socket.timeout as e:
             raise e
         except (socket.error, ConnectionError):
             self.client.state = DisconnectedState(self.client)
+
+    def close_window(self):
+        self.client.bgp.close()
+        super().close_window()
 
 
 class DisconnectedState(LockState):
@@ -146,11 +162,13 @@ class DisconnectedState(LockState):
 
 
 class PlayingState(State):
+    """Base class for local and network playing states. Do not use."""
     def pause(self):
         self.client.state = PauseState(self.client, self)
 
     def move(self, from_point, to_point):
         self.client.game.move(from_point, to_point)
+        self._check_win_state()
 
     def _check_win_state(self):
         if self.client.game.game_over:
@@ -160,7 +178,6 @@ class PlayingState(State):
 class LocalPlayingState(PlayingState):
     def end_move(self):
         self.client.game.roll_dice()
-        self._check_win_state()
 
     @State.possible_points.getter
     def possible_points(self):
@@ -178,10 +195,8 @@ class NetworkPlayingState(PlayingState):
 
     def end_move(self):
         self.client.bgp.send_end_move()
-        self._check_win_state()
 
     def handle_received(self):
-        print('b')
         try:
             message = self.client.bgp.receive()
             print(message)
@@ -200,10 +215,16 @@ class NetworkPlayingState(PlayingState):
                     roll = logic.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp.send_dies(roll.die1, roll.die2)
+            self._check_win_state()
         except socket.timeout as e:
             raise e
         except (socket.error, ConnectionError):
             self.client.state = DisconnectedState(self.client)
+
+    def close_window(self):
+        self.client.bgp.send_quit()
+        self.client.bgp.close()
+        super().close_window()
 
     @State.possible_points.getter
     def possible_points(self):

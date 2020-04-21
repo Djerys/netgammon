@@ -2,7 +2,7 @@ import socket
 
 
 class BGPClient:
-    def __init__(self, connection, timeout=0.1):
+    def __init__(self, connection, timeout=0.001):
         self.connection = connection
         self.timeout = timeout
         self._socket = None
