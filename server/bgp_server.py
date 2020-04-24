@@ -35,7 +35,7 @@ class QuitMessageException(Exception):
 class PlayersCouple:
     _first_connected_player = None
     _couple_lock = threading.Lock()
-    colors = [WHITE, RED]
+    _colors = [WHITE, RED]
 
     def __init__(self):
         self.current_player = None
@@ -49,14 +49,14 @@ class PlayersCouple:
     def join(cls, player):
         with cls._couple_lock:
             if cls._first_connected_player is None:
-                random.shuffle(cls.colors)
-                player.color = cls.colors[0]
+                random.shuffle(cls._colors)
+                player.color = cls._colors[0]
                 player.couple = None
                 cls._first_connected_player = player
             else:
                 player1 = cls._first_connected_player
                 player2 = player
-                player2.color = cls.colors[1]
+                player2.color = cls._colors[1]
                 player1.opponent = player2
                 player2.opponent = player1
                 couple = PlayersCouple()
