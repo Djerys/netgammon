@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 600
 
 FRAME_RATE = 30
 
-CAPTION = 'Backgammon'
+CAPTION = 'Netgammon'
 
 BACKGROUND_IMAGE = 'assets/image/background.png'
 
