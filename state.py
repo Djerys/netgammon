@@ -186,7 +186,8 @@ class _PlayingState(State):
 
 class LocalPlayingState(_PlayingState):
     def end_move(self):
-        self.client.game.roll_dice()
+        if not self.possible_points:
+            self.client.game.roll_dice()
 
     @State.possible_points.getter
     def possible_points(self):
@@ -203,7 +204,8 @@ class NetworkPlayingState(_PlayingState):
         self.client.bgp.send_move(from_point, to_point)
 
     def end_move(self):
-        self.client.bgp.send_end_move()
+        if not self.possible_points:
+            self.client.bgp.send_end_move()
 
     def handle_received(self):
         try:
