@@ -1,4 +1,3 @@
-import sys
 import socket
 from functools import lru_cache
 
@@ -8,7 +7,6 @@ import ecys
 import logic
 import config
 import color
-import state
 import graphic as g
 import component as c
 
@@ -152,7 +150,6 @@ class InputSystem(ecys.System):
     def __init__(self, client):
         super().__init__()
         self.client = client
-        self.clicked_from = None
 
     def update(self):
         for event in pygame.event.get():
@@ -180,44 +177,47 @@ class InputSystem(ecys.System):
             other = []
             clicked = False
             for entity in from_entities:
-                input = entity.get_component(c.Input)
                 render = entity.get_component(c.Render)
                 point = entity.get_component(logic.Point)
                 if (render.rect.collidepoint(event.pos) and
                         point in self.client.state.possible_points):
                     render.visible = True
                     self._make_to_points_invisible()
-                    input.clicked = True
-                    self.clicked_from = (input, render, point)
+                    entity.add_component(c.Click())
                     clicked = True
                 else:
-                    other.append((input, render))
+                    other.append(entity)
 
             if clicked:
-                for input, render in other:
-                    input.clicked = False
+                for entity in other:
+                    render = entity.get_component(c.Render)
+                    if entity.has_component(c.Click):
+                        entity.remove_component(c.Click)
                     render.visible = False
 
     def _handle_to_point_press(self, event):
         if self._button_clicked(event):
             entities = self.world.entities_with(c.ToPoint)
             clicked = False
-            renders = []
+            to_point_renders = []
             for entity in entities:
                 render = entity.get_component(c.Render)
-                renders.append(render)
+                to_point_renders.append(render)
+                clicked_points = self.world.entities_with(c.Click)
                 if (render.rect.collidepoint(event.pos) and
                         render.visible and
-                        self.clicked_from):
-                    point = entity.get_component(logic.Point)
-                    self.client.state.move(self.clicked_from[2], point)
-                    self.clicked_from[0].clicked = False
-                    self.clicked_from[1].visible = False
-                    self.clicked_from = None
+                        clicked_points):
+                    from_point_entity = clicked_points[0]
+                    from_point = from_point_entity.get_component(logic.Point)
+                    from_point_render = from_point_entity.get_component(c.Render)
+                    from_point_render.visible = False
+                    from_point_entity.remove_component(c.Click)
+                    to_point = entity.get_component(logic.Point)
+                    self.client.state.move(from_point, to_point)
                     clicked = True
 
             if clicked:
-                for render in renders:
+                for render in to_point_renders:
                     render.visible = False
 
     def _make_to_points_invisible(self):
@@ -272,24 +272,16 @@ class HintSystem(ecys.System):
         self.game = client.game
 
     def update(self):
-        point_entity = self._clicked_from_point()
-        if not point_entity:
+        clicked_points = self.world.entities_with(c.Click)
+        if not clicked_points:
             return
-        point = point_entity.get_component(logic.Point)
+        from_point_entity = self.world.entities_with(c.Click)[0]
+        from_point = from_point_entity.get_component(logic.Point)
         try:
-            move = self.game.board.possible_moves(self.game.roll, point)
+            move = self.game.board.possible_moves(self.game.roll, from_point)
             self._make_visible_possibles(move)
         except AssertionError:
             pass
-
-    def _clicked_from_point(self):
-        point_entity = None
-        entities = self.world.entities_with(c.FromPoint)
-        for entity in entities:
-            input = entity.get_component(c.Input)
-            if input.clicked:
-                point_entity = entity
-        return point_entity
 
     def _make_visible_possibles(self, possible_points):
         entities = self.world.entities_with(c.ToPoint)

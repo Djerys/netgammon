@@ -46,9 +46,9 @@ class BackgammonGameClient:
     def _points_on_start(self):
         for point_entity in self.world.entities_with(c.FromPoint):
             render = point_entity.get_component(c.Render)
-            input = point_entity.get_component(c.Input)
             render.visible = False
-            input.clicked = False
+            if point_entity.has_component(c.Click):
+                point_entity.remove_component(c.Click)
         for point_entity in self.world.entities_with(c.ToPoint):
             render = point_entity.get_component(c.Render)
             render.visible = False
@@ -113,13 +113,11 @@ class BackgammonGameClient:
         world.create_entity(
             c.Render(config.WHITE_FROM_IMAGE, g.FROM_COORDS[0]),
             c.FromPoint(),
-            c.Input(),
             self.game.board.points[0]
         )
         world.create_entity(
             c.Render(config.RED_FROM_IMAGE, g.FROM_COORDS[25]),
             c.FromPoint(),
-            c.Input(),
             self.game.board.points[25]
         )
         image = config.RED_FROM_IMAGE
@@ -129,7 +127,6 @@ class BackgammonGameClient:
             world.create_entity(
                 c.Render(image, g.FROM_COORDS[point.number]),
                 c.FromPoint(),
-                c.Input(),
                 point
             )
 

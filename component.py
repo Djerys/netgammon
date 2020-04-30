@@ -33,11 +33,6 @@ class Render(ecys.Component):
 
 
 @dataclass
-class Input(ecys.Component):
-    clicked: bool = False
-
-
-@dataclass
 class Die(ecys.Component):
     color: str
     number: int
@@ -48,6 +43,10 @@ class FromPoint(ecys.Component):
 
 
 class ToPoint(ecys.Component):
+    pass
+
+
+class Click(ecys.Component):
     pass
 
 
