@@ -65,5 +65,5 @@ MENU_BUTTON_IMAGES = {
     }
 }
 
-HOST = 'localhost'
+HOST = '192.168.0.100'
 PORT = 34299
