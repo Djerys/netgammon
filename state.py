@@ -74,10 +74,12 @@ class LockState(State):
             self.client.bgp.close()
         try:
             self.client.bgp.connect()
-        except (socket.error, ConnectionError):
+        except socket.timeout:
+            pass
+        except (socket.error, ConnectionError) as e:
             self.client.state = DisconnectedState(self.client)
-        else:
-            self.client.state = SearchingOpponentState(self.client)
+            return
+        self.client.state = SearchingOpponentState(self.client)
 
     @State.possible_points.getter
     def possible_points(self):
