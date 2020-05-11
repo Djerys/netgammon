@@ -5,7 +5,7 @@ import sys
 
 import config
 import color
-import logic
+import backgammon
 import component as c
 import graphic as g
 
@@ -153,7 +153,7 @@ class SearchingOpponentState(LockState):
                 self.client.network_game_color = message['arg']
                 self.client.restart()
                 if self.client.network_game_color == color.WHITE:
-                    roll = logic.Roll()
+                    roll = backgammon.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp.send_dies(roll.die1, roll.die2)
                 self.client.state = ViewNetworkColorState(self.client)
@@ -201,9 +201,9 @@ class LocalPlayingState(_PlayingState):
 
 class NetworkPlayingState(_PlayingState):
     def move(self, from_point, to_point):
-        if isinstance(from_point, logic.Point):
+        if isinstance(from_point, backgammon.Point):
             from_point = from_point.number
-        if isinstance(to_point, logic.Point):
+        if isinstance(to_point, backgammon.Point):
             to_point = to_point.number
         self.client.game.move(from_point, to_point)
         self._check_win_state()
@@ -222,13 +222,13 @@ class NetworkPlayingState(_PlayingState):
             if self.client.network_game_color == self.client.game.color:
                 if message['command'] == 'DIES':
                     die1, die2 = message['args']
-                    self.client.game.roll_dice(logic.Roll(die1, die2))
+                    self.client.game.roll_dice(backgammon.Roll(die1, die2))
             elif self.client.network_game_color != self.client.game.color:
                 if message['command'] == 'MOVE':
                     from_point, to_point = message['args']
                     self.client.game.move(from_point, to_point)
                 elif message['command'] == 'ENDMOVE':
-                    roll = logic.Roll()
+                    roll = backgammon.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp.send_dies(roll.die1, roll.die2)
             self._check_win_state()

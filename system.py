@@ -4,7 +4,7 @@ from functools import lru_cache
 import pygame
 import ecys
 
-import logic
+import backgammon
 import config
 import color
 import graphic as g
@@ -68,7 +68,7 @@ class ArrangeDiesSystem(ecys.System):
             unused_dies.remove(die)
 
 
-@ecys.requires(c.Render, logic.Piece)
+@ecys.requires(c.Render, backgammon.Piece)
 class ArrangePiecesSystem(ecys.System):
     def __init__(self, client):
         super().__init__()
@@ -84,7 +84,7 @@ class ArrangePiecesSystem(ecys.System):
         outside_points = (points[0], points[25])
         for point in outside_points:
             for piece in point.pieces:
-                piece_entity = _entity_with_component(self, piece, logic.Piece)
+                piece_entity = _entity_with_component(self, piece, backgammon.Piece)
                 render = piece_entity.get_component(c.Render)
                 render.visible = False
 
@@ -97,7 +97,7 @@ class ArrangePiecesSystem(ecys.System):
         ]
         for point, pieces in bar:
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.AdditionalBanner
+                self, point, backgammon.Point, c.AdditionalBanner
             )
             banner_render = banner_entity.get_component(c.Render)
             if pieces:
@@ -109,7 +109,7 @@ class ArrangePiecesSystem(ecys.System):
     def _arrange_inside_pieces(self):
         for point in self.game.board.points[1:25]:
             for piece_number, piece in enumerate(point.pieces):
-                piece_entity = _entity_with_component(self, piece, logic.Piece)
+                piece_entity = _entity_with_component(self, piece, backgammon.Piece)
                 piece_render = piece_entity.get_component(c.Render)
                 coords = g.PIECE_COORDS[point.number, piece_number]
                 piece_render.rect.x, piece_render.rect.y = coords
@@ -118,7 +118,7 @@ class ArrangePiecesSystem(ecys.System):
                 else:
                     piece_render.visible = False
             banner_entity = _entity_with_component(
-                self, point, logic.Point, c.AdditionalBanner
+                self, point, backgammon.Point, c.AdditionalBanner
             )
             banner_render = banner_entity.get_component(c.Render)
             invisible_pieces = point.pieces[config.VISIBLE_NUMBER:]
@@ -178,7 +178,7 @@ class InputSystem(ecys.System):
             clicked = False
             for entity in from_entities:
                 render = entity.get_component(c.Render)
-                point = entity.get_component(logic.Point)
+                point = entity.get_component(backgammon.Point)
                 if (render.rect.collidepoint(event.pos) and
                         point in self.client.state.possible_points):
                     render.visible = True
@@ -208,11 +208,11 @@ class InputSystem(ecys.System):
                         render.visible and
                         clicked_points):
                     from_point_entity = clicked_points[0]
-                    from_point = from_point_entity.get_component(logic.Point)
+                    from_point = from_point_entity.get_component(backgammon.Point)
                     from_point_render = from_point_entity.get_component(c.Render)
                     from_point_render.visible = False
                     from_point_entity.remove_component(c.Click)
-                    to_point = entity.get_component(logic.Point)
+                    to_point = entity.get_component(backgammon.Point)
                     self.client.state.move(from_point, to_point)
                     clicked = True
 
@@ -276,7 +276,7 @@ class HintSystem(ecys.System):
         if not clicked_points:
             return
         from_point_entity = self.world.entities_with(c.Click)[0]
-        from_point = from_point_entity.get_component(logic.Point)
+        from_point = from_point_entity.get_component(backgammon.Point)
         try:
             move = self.game.board.possible_moves(self.game.roll, from_point)
             self._make_visible_possibles(move)
@@ -286,7 +286,7 @@ class HintSystem(ecys.System):
     def _make_visible_possibles(self, possible_points):
         entities = self.world.entities_with(c.ToPoint)
         for entity in entities:
-            number = entity.get_component(logic.Point).number
+            number = entity.get_component(backgammon.Point).number
             if number in possible_points:
                 render = entity.get_component(c.Render)
                 render.visible = True
