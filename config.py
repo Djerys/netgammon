@@ -50,6 +50,8 @@ BANNER_IMAGES = {
     6: 'assets/image/banner6.png',
     7: 'assets/image/banner7.png',
     8: 'assets/image/banner8.png',
+    9: 'assets/image/banner9.png',
+    10: 'assets/image/banner10.png'
 }
 
 MENU_BUTTON_IMAGES = {
