@@ -8,6 +8,8 @@ STATE = 1
 NET = 2
 
 DISCONNECT = 'D'
+NETWORK_COLOR_WHITE = 'W'
+NETWORK_COLOR_RED = 'R'
 
 
 @dataclass

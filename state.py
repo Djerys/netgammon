@@ -119,6 +119,9 @@ class PauseState(LockState):
             self.client.bgp.close()
         super().start_local_game()
 
+    def set_state_image(self):
+        self.from_state.set_state_image()
+
     def pause(self):
         self.client.state = self.from_state
 
@@ -153,7 +156,7 @@ class SearchingOpponentState(LockState):
                     roll = logic.Roll()
                     self.client.game.roll_dice(roll)
                     self.client.bgp.send_dies(roll.die1, roll.die2)
-                self.client.state = NetworkPlayingState(self.client)
+                self.client.state = ViewNetworkColorState(self.client)
         except socket.timeout as e:
             raise e
         except (socket.error, ConnectionError):
@@ -177,16 +180,16 @@ class _PlayingState(State):
     def pause(self):
         self.client.state = PauseState(self.client, self)
 
-    def move(self, from_point, to_point):
-        self.client.game.move(from_point, to_point)
-        self._check_win_state()
-
     def _check_win_state(self):
         if self.client.game.game_over:
             self.client.state = WinState(self.client)
 
 
 class LocalPlayingState(_PlayingState):
+    def move(self, from_point, to_point):
+        self.client.game.move(from_point, to_point)
+        self._check_win_state()
+
     def end_move(self):
         if not self.possible_points:
             self.client.game.roll_dice()
@@ -202,7 +205,8 @@ class NetworkPlayingState(_PlayingState):
             from_point = from_point.number
         if isinstance(to_point, logic.Point):
             to_point = to_point.number
-        super().move(from_point, to_point)
+        self.client.game.move(from_point, to_point)
+        self._check_win_state()
         self.client.bgp.send_move(from_point, to_point)
 
     def end_move(self):
@@ -243,3 +247,24 @@ class NetworkPlayingState(_PlayingState):
         if self.client.network_game_color != self.client.game.color:
             return []
         return self.client.game.possible_points
+
+
+class ViewNetworkColorState(NetworkPlayingState):
+    def move(self, from_point, to_point):
+        pass
+
+    def end_move(self):
+        self.client.state = NetworkPlayingState(self.client)
+
+    def set_state_image(self):
+        state_button = self.client.state_button
+        render = state_button.get_component(c.Render)
+        render.visible = True
+        if self.client.network_game_color == color.WHITE:
+            render.image = config.MENU_BUTTON_IMAGES[g.STATE][g.NETWORK_COLOR_WHITE]
+        else:
+            render.image = config.MENU_BUTTON_IMAGES[g.STATE][g.NETWORK_COLOR_RED]
+
+    @State.possible_points.getter
+    def possible_points(self):
+        return []

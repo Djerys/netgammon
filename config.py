@@ -57,7 +57,9 @@ MENU_BUTTON_IMAGES = {
     graphic.STATE: {
         color.RED: 'assets/image/red_wins.png',
         color.WHITE: 'assets/image/white_wins.png',
-        graphic.DISCONNECT: 'assets/image/disconnect.png'
+        graphic.DISCONNECT: 'assets/image/disconnect.png',
+        graphic.NETWORK_COLOR_WHITE: 'assets/image/color_white.png',
+        graphic.NETWORK_COLOR_RED: 'assets/image/color_red.png'
     },
     graphic.NET: {
         'press': 'assets/image/net_pvp.png',
