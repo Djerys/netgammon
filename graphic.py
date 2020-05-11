@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import color
@@ -35,14 +34,13 @@ class DiceCoordinates:
 
 
 @dataclass
-class PointCoordinates:
+class _PointCoordinates:
     red_y: int
     white_y: int
     home_x: int
     outer_x: int
     x_step: int = 35
 
-    @abstractmethod
     def __getitem__(self, point):
         if 1 <= point <= 6:
             x = self.home_x + (6 - point) * self.x_step
@@ -59,7 +57,7 @@ class PointCoordinates:
 
 
 @dataclass
-class PiecesCoordinates(PointCoordinates):
+class PiecesCoordinates(_PointCoordinates):
     height: int = 26
     red_y: int = 43
     white_y: int = 530
@@ -75,7 +73,7 @@ class PiecesCoordinates(PointCoordinates):
 
 
 @dataclass
-class FromPointCoordinates(PointCoordinates):
+class FromPointCoordinates(_PointCoordinates):
     home_x: int = 273
     outer_x: int = 23
     red_y: int = 15
@@ -91,7 +89,7 @@ class FromPointCoordinates(PointCoordinates):
 
 
 @dataclass
-class ToPointCoordinates(PointCoordinates):
+class ToPointCoordinates(_PointCoordinates):
     home_x: int = 273
     outer_x: int = 23
     red_y: int = 247
