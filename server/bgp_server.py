@@ -43,29 +43,29 @@ class PlayersCouple:
 
     def switch_current(self):
         with self._lock:
-            self.current_player = self.current_player.opponent
+            self.current_player = self.current_player._opponent
 
     @classmethod
     def join(cls, player):
         with cls._couple_lock:
             if cls._first_connected_player is None:
                 random.shuffle(cls._colors)
-                player.color = cls._colors[0]
-                player.couple = None
+                player._color = cls._colors[0]
+                player._couple = None
                 cls._first_connected_player = player
             else:
                 player1 = cls._first_connected_player
                 player2 = player
-                player2.color = cls._colors[1]
-                player1.opponent = player2
-                player2.opponent = player1
+                player2._color = cls._colors[1]
+                player1._opponent = player2
+                player2._opponent = player1
                 couple = PlayersCouple()
-                if player1.color == WHITE:
+                if player1._color == WHITE:
                     couple.current_player = player1
                 else:
                     couple.current_player = player2
-                player1.couple = couple
-                player2.couple = couple
+                player1._couple = couple
+                player2._couple = couple
                 cls._first_connected_player = None
 
 
@@ -75,9 +75,9 @@ class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 class PlayerHandler(socketserver.StreamRequestHandler):
-    color = None
-    couple = None
-    opponent = None
+    _color = None
+    _couple = None
+    _opponent = None
 
     def handle(self):
         print(f'Connected: {self}')
@@ -100,9 +100,9 @@ class PlayerHandler(socketserver.StreamRequestHandler):
 
     def _initialize(self):
         PlayersCouple.join(self)
-        if self.couple:
-            self.send(color_message(self.color))
-            self.opponent.send(color_message(self.opponent.color))
+        if self._couple:
+            self.send(color_message(self._color))
+            self._opponent.send(color_message(self._opponent._color))
 
     def _process_messages(self):
         while True:
@@ -116,12 +116,12 @@ class PlayerHandler(socketserver.StreamRequestHandler):
         if self._is_message_valid(message):
             message = message.decode('utf-8')
             if message.startswith('QUIT'):
-                self.opponent.send(message)
+                self._opponent.send(message)
                 raise QuitMessageException()
-            elif self == self.couple.current_player:
+            elif self == self._couple.current_player:
                 if message.startswith('ENDMOVE'):
-                    self.couple.switch_current()
-                self.opponent.send(message)
+                    self._couple.switch_current()
+                self._opponent.send(message)
         else:
             raise ValueError(f'Invalid protocol message: {message}')
 
