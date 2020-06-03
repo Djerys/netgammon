@@ -200,6 +200,7 @@ class LocalPlayingState(_PlayingState):
 
 
 class NetworkPlayingState(_PlayingState):
+    # . . .
     def move(self, from_point, to_point):
         if isinstance(from_point, backgammon.Point):
             from_point = from_point.number
