@@ -12,22 +12,22 @@ Example of using:
 Screenshots:
 
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen1.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen1.jpg)
 
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen2.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen2.jpg)
 
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen3.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen3.jpg)
 
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen4.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen4.jpg)
 
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen5.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen5.jpg)
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen6.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen6.jpg)
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen7.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen7.jpg)
 
-![](https://github.com/Djerys/netgammon/blob/master/screens/screen8.jpg)
+![](https://github.com/Djerys/netgammon/tree/master/screens/screen8.jpg)
